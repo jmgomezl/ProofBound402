@@ -4,12 +4,25 @@ export const DEMO_RESOURCES = {
     label: "Market pulse",
     path: "/reports/market-pulse",
     description: "A five-line market summary.",
+    content: [
+      "HBAR steady; agent-driven API spend up 14% week over week.",
+      "x402 adoption: three new facilitators came online this week.",
+      "Micropayments under one cent now 38% of metered API calls.",
+      "Settlement finality on Hedera keeps per-request pricing viable.",
+      "Outlook: paid agent traffic keeps compounding.",
+    ],
   },
   premium: {
     id: "premium",
     label: "Alpha dossier",
     path: "/reports/alpha-dossier",
     description: "The protected high-value research payload.",
+    content: [
+      "CONFIDENTIAL — delivered only against a matching payment label.",
+      "Deep dive: pricing power in machine-to-machine commerce.",
+      "Finding: agents renegotiate API terms in milliseconds; rails must keep up.",
+      "Thesis: request-bound payments become the default settlement pattern.",
+    ],
   },
 } as const;
 

@@ -174,10 +174,21 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .flow-strip--danger .flow-strip__node:last-child { color: #fff; background: var(--red); border-color: var(--red); }
 .flow-strip--success .flow-strip__node:last-child { color: var(--ink); background: var(--acid); border-color: var(--ink); }
 @keyframes flow-node-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+.report-doc { margin: 0 0 14px; background: var(--paper); border: 1px solid var(--ink); box-shadow: 5px 5px 0 rgba(23, 23, 20, .3); animation: report-open 340ms ease-out; transform-origin: top; }
+@keyframes report-open { from { transform: scaleY(.55); opacity: 0; } }
+.report-doc__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 15px; border-bottom: 1px solid var(--line); }
+.report-doc__head b { font-size: 14px; }
+.report-doc__head span { padding: 3px 7px; color: var(--ink); background: var(--acid); border: 1px solid var(--ink); font: 800 8px "JetBrains Mono Variable", monospace; }
+.report-doc ul { display: grid; gap: 8px; margin: 0; padding: 13px 15px; list-style: none; }
+.report-doc li { padding-left: 11px; font-size: 11px; line-height: 1.45; border-left: 2px solid var(--acid-dark); opacity: 0; animation: flow-node-in 300ms ease-out forwards; }
+.report-doc footer { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 15px; color: var(--muted); font: 700 8px "JetBrains Mono Variable", monospace; border-top: 1px solid var(--line); }
+.report-doc footer a { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   .flow-strip__node { animation-duration: 1ms; animation-delay: 0ms !important; }
   .action--attention:not(:disabled), .demo-milestone--active > span:first-child { animation: none; }
   .scenario--flash { animation: none; box-shadow: inset 0 0 0 4px var(--ink); }
+  .report-doc { animation: none; }
+  .report-doc li { animation-duration: 1ms; animation-delay: 0ms !important; }
 }
 
 .result-band { min-height: 112px; display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 19px; padding: 20px 30px; background: #22221e; color: #fff; border-bottom: 1px solid var(--ink); }
