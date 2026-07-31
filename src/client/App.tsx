@@ -4,11 +4,7 @@ import {
   Check,
   ChevronDown,
   CircleDot,
-  Clock3,
-  Coins,
   ExternalLink,
-  FileCheck2,
-  FileText,
   Fingerprint,
   FlaskConical,
   LockKeyhole,
@@ -17,7 +13,7 @@ import {
   ReceiptText,
   RotateCcw,
   ShieldCheck,
-  UserRound,
+  Tag,
   WalletCards,
   X,
 } from "lucide-react";
@@ -33,10 +29,10 @@ import {
 const EMPTY_STATE: DemoState = { mode: "simulated", events: [] };
 
 const FRIENDLY_RESULTS: Record<string, string> = {
-  CHALLENGE_ISSUED: "Purchase protected. Its one-time fingerprint is ready.",
-  RESOURCE_MISMATCH: "Blocked. This payment belongs to a different report.",
-  DELIVERED: "Payment verified. The intended report is unlocked.",
-  UNBOUND_ATTACK_ACCEPTED: "Risk confirmed. One payment unlocked the wrong report.",
+  CHALLENGE_ISSUED: "One-time payment label created.",
+  RESOURCE_MISMATCH: "Blocked. This payment is labeled for a different report.",
+  DELIVERED: "Payment confirmed. The right report is open.",
+  UNBOUND_ATTACK_ACCEPTED: "Problem confirmed. The same payment opened the wrong report.",
   RESET: "Demo cleared.",
 };
 
@@ -71,6 +67,28 @@ function EventIcon({ event }: { event: DemoEvent }) {
   if (event.kind === "receipt.published") return <Fingerprint size={16} />;
   if (event.tone === "success") return <Check size={16} />;
   return <CircleDot size={16} />;
+}
+
+function friendlyEvent(event: DemoEvent): { title: string; detail: string } {
+  if (event.kind === "payment.created") {
+    return { title: "Payment accepted without a label", detail: "The server knows money moved, but not which report it should open." };
+  }
+  if (event.kind === "attack.accepted") {
+    return { title: "Wrong report opened", detail: "The unlabeled payment looked valid because both reports have the same price." };
+  }
+  if (event.kind === "challenge.issued") {
+    return { title: event.title.replace("Binding issued", "One-time label created"), detail: "The payment now names one report and can be used only once before it expires." };
+  }
+  if (event.kind === "attack.blocked") {
+    return { title: "Wrong report blocked", detail: "The report being requested does not match the label attached to this payment." };
+  }
+  if (event.kind === "settlement.confirmed") {
+    return { title: "Payment confirmed publicly", detail: "Hedera confirms the payment and its one-time label together." };
+  }
+  if (event.kind === "request.delivered") {
+    return { title: event.title.replace("authorized", "opened"), detail: "The requested report matches the payment label, so access is granted." };
+  }
+  return { title: event.title, detail: event.detail };
 }
 
 function ActionButton({
@@ -216,12 +234,12 @@ export function App() {
   };
 
   const nextAction = guidedStep === 0
-    ? `Protect ${selected.label}`
+    ? `Create label for ${selected.label}`
     : guidedStep === 1
-      ? `Try it on ${alternate.label}`
+      ? `Try label on ${alternate.label}`
       : guidedStep === 2
-        ? `${state.mode === "testnet" ? `Pay ${price} & unlock` : "Simulate payment & unlock"}`
-        : "Report unlocked";
+        ? `${state.mode === "testnet" ? `Pay ${price} and open` : "Simulate payment and open"}`
+        : "Report open";
 
   return (
     <div className="shell">
@@ -253,55 +271,40 @@ export function App() {
       <main>
         <section className="intro">
           <div className="intro__copy">
-            <span className="eyebrow">PAYMENT PROOF / HEDERA</span>
+            <span className="eyebrow">ONE PAYMENT / ONE PERMISSION</span>
             <h1>ProofBound402</h1>
-            <p><strong>Payment is not permission.</strong><span>x402 confirms money moved. ProofBound402 also proves the one exact request it may unlock.</span></p>
-          </div>
-          <div className="permission-equation" aria-label="Payment is different from permission">
-            <span><WalletCards size={20} /><b>Payment</b><small>Money moved</small></span>
-            <X size={19} />
-            <span className="permission-equation__proof"><LockKeyhole size={20} /><b>Permission</b><small>Exact request approved</small></span>
+            <p><strong>Pay once. Open one thing.</strong><span>Each payment gets a one-time label saying exactly what it can open.</span></p>
           </div>
         </section>
 
-        <section className="binding-explainer" aria-labelledby="binding-title">
-          <div className="binding-explainer__heading">
+        <section className="simple-model" aria-labelledby="model-title">
+          <div className="simple-model__heading">
             <div>
-              <span className="eyebrow">WHAT GETS SEALED INTO THE PAYMENT</span>
-              <h2 id="binding-title">One fingerprint describes the whole purchase</h2>
+              <span className="eyebrow">THE WHOLE IDEA</span>
+              <h2 id="model-title">The payment says what it is for</h2>
             </div>
-            <p>Change any sealed fact and the payment no longer grants access.</p>
+            <p>For this purchase, the label says: “{selected.label} only.”</p>
           </div>
-          <div className="binding-map">
-            <div className="binding-facts" aria-label="Facts included in the request fingerprint">
-              <span><FileText size={15} /><small>REPORT</small><b>{selected.label}</b></span>
-              <span><ArrowRight size={15} /><small>REQUEST</small><b title={`POST ${selected.path}`}>POST request</b></span>
-              <span><FileCheck2 size={15} /><small>CONTENT</small><b title="JSON body / 24-hour window">JSON / 24h window</b></span>
-              <span><Coins size={15} /><small>PRICE</small><b>{price}</b></span>
-              <span><UserRound size={15} /><small>BUYER + NETWORK</small><b>Hedera testnet</b></span>
-              <span><Clock3 size={15} /><small>SAFETY</small><b>Expires / one use</b></span>
+          <div className="simple-model__flow">
+            <div className="simple-purchase">
+              <WalletCards size={22} />
+              <span><small>YOU PAY FOR</small><b>{selected.label}</b><code>{price}</code></span>
             </div>
-
-            <ArrowRight className="binding-map__arrow" size={21} />
-
-            <div className={`fingerprint-core ${challenge ? "fingerprint-core--ready" : ""}`}>
-              <Fingerprint size={28} />
-              <span>PAYMENT FINGERPRINT</span>
-              <code title={challenge?.memo}>{challenge ? shorten(challenge.memo, 19, 12) : "pb402:v1:<fingerprint>"}</code>
-              <small>{challenge ? "Sealed before the buyer signs" : "Created before payment"}</small>
+            <ArrowRight className="simple-model__arrow" size={21} />
+            <div className={`payment-label ${challenge ? "payment-label--ready" : ""}`}>
+              <Tag size={23} />
+              <span><small>ONE-TIME PAYMENT LABEL</small><b>Only for {selected.label}</b><em>{challenge ? "READY" : "PREVIEW"}</em></span>
             </div>
-
-            <ArrowRight className="binding-map__arrow" size={21} />
-
-            <div className="permission-results" aria-label="Authorization outcomes">
-              <div className="permission-result permission-result--allow">
+            <ArrowRight className="simple-model__arrow" size={21} />
+            <div className="simple-outcomes" aria-label="What the payment can open">
+              <div className="simple-outcome simple-outcome--allow">
                 <Check size={17} />
-                <span><small>EXACT SAME REQUEST</small><b>{selected.label}</b></span>
-                <strong>UNLOCK</strong>
+                <span><small>RIGHT REPORT</small><b>{selected.label}</b></span>
+                <strong>OPEN</strong>
               </div>
-              <div className="permission-result permission-result--deny">
-                <ShieldCheck size={17} />
-                <span><small>ANY FACT CHANGES</small><b title={`${alternate.label} or edited request data`}>Other report or data</b></span>
+              <div className="simple-outcome simple-outcome--deny">
+                <X size={17} />
+                <span><small>WRONG REPORT</small><b>{alternate.label}</b></span>
                 <strong>BLOCK</strong>
               </div>
             </div>
@@ -309,26 +312,26 @@ export function App() {
         </section>
 
         <section className="demo-rail" aria-label="Demo progress">
-          <div className="demo-rail__label"><span className="eyebrow">JUDGE FLOW</span><b>Three claims. One live proof.</b></div>
+          <div className="demo-rail__label"><span className="eyebrow">SEE IT WORK</span><b>Three short steps.</b></div>
           <div className="demo-rail__steps">
             <DemoMilestone
               number={1}
-              title="Expose the gap"
-              detail="Payment reused"
+              title="Show the problem"
+              detail="Wrong report opens"
               state={riskExposed ? "done" : "active"}
             />
             <ArrowRight size={15} />
             <DemoMilestone
               number={2}
-              title="Block the reuse"
-              detail="Request mismatch"
+              title="Block the wrong report"
+              detail="Label does not match"
               state={reuseBlocked ? "done" : riskExposed ? "active" : "waiting"}
             />
             <ArrowRight size={15} />
             <DemoMilestone
               number={3}
-              title="Verify on Hedera"
-              detail="Public evidence"
+              title="Confirm the payment"
+              detail="Public record"
               state={delivered ? "done" : reuseBlocked ? "active" : "waiting"}
             />
           </div>
@@ -338,19 +341,19 @@ export function App() {
           <div className="section-heading">
             <div>
               <span className="eyebrow">THE DIFFERENCE</span>
-              <h2 id="comparison-title">What does the payment actually authorize?</h2>
+              <h2 id="comparison-title">Can one payment open the wrong report?</h2>
             </div>
-            <p>Two reports. Same price. Only one payment check knows which was purchased.</p>
+            <p>Without a label they look identical. With a label, only the right report opens.</p>
           </div>
 
           <div className="comparison-grid">
             <article className="scenario scenario--unsafe">
               <div className="scenario__header">
                 <span className="scenario__number">01</span>
-                <span className="risk"><AlertTriangle size={14} /> WITHOUT REQUEST PROOF</span>
+                <span className="risk"><AlertTriangle size={14} /> WITHOUT A LABEL</span>
               </div>
-              <h3>A receipt can be reused</h3>
-              <p className="scenario__lead">An ordinary check sees the same price and recipient for both reports.</p>
+              <h3>Same payment opens both</h3>
+              <p className="scenario__lead">Without a label, two reports with the same price look identical.</p>
               <div className="receipt-compare">
                 <div><span>PAID FOR</span><b>Market pulse</b><code>{price}</code></div>
                 <ArrowRight size={18} />
@@ -360,7 +363,7 @@ export function App() {
                 <AlertTriangle size={17} />
                 <span>
                   <b>{riskExposed ? "Reuse succeeded: wrong report delivered" : "Can the payment unlock the wrong report?"}</b>
-                  <small>{riskExposed ? "The payment-only check could not tell the requests apart." : "Replay the first receipt against the second request."}</small>
+                  <small>{riskExposed ? "The payment did not say which report it was for." : "Try the first payment on the second report."}</small>
                 </span>
               </div>
               <ActionButton
@@ -369,17 +372,17 @@ export function App() {
                 disabled={busy !== null}
                 testId="show-risk"
               >
-                {busy === "unbound" ? "Checking..." : riskExposed ? "Replay the gap" : "Expose the payment-only gap"}
+                {busy === "unbound" ? "Checking..." : riskExposed ? "Show it again" : "Show what goes wrong"}
               </ActionButton>
             </article>
 
             <article className="scenario scenario--bound">
               <div className="scenario__header">
                 <span className="scenario__number">02</span>
-                <span className="guard"><LockKeyhole size={14} /> PROOFBOUND</span>
+                <span className="guard"><LockKeyhole size={14} /> ONE-TIME LABEL</span>
               </div>
-              <h3>One payment, one report</h3>
-              <p className="scenario__lead">The payment carries a unique fingerprint for the intended request.</p>
+              <h3>Payment opens one report</h3>
+              <p className="scenario__lead">The payment label names the report it is allowed to open.</p>
 
               <div className="resource-picker" role="group" aria-label="Report to protect">
                 {(Object.keys(DEMO_RESOURCES) as ResourceId[]).map((resourceId) => (
@@ -399,20 +402,20 @@ export function App() {
               <ol className="progress-list">
                 <ProgressStep
                   number={1}
-                  title="Protect the purchase"
-                  detail={`${selected.label} gets a one-time request fingerprint.`}
+                  title="Create a one-time label"
+                  detail={`Label this payment “${selected.label} only.”`}
                   state={guidedStep === 0 ? "active" : "done"}
                 />
                 <ProgressStep
                   number={2}
-                  title="Test payment reuse"
-                  detail={`Try the fingerprint on ${alternate.label}.`}
+                  title="Try the wrong report"
+                  detail={`Use the label on ${alternate.label}.`}
                   state={guidedStep < 1 ? "waiting" : guidedStep === 1 ? "active" : "done"}
                 />
                 <ProgressStep
                   number={3}
-                  title="Unlock the intended report"
-                  detail={state.mode === "testnet" ? `Submit a ${price} Hedera testnet payment.` : "Verify the exact request in demo mode."}
+                  title="Open the right report"
+                  detail={state.mode === "testnet" ? `Pay ${price} on the public test network.` : "Check the right report in demo mode."}
                   state={guidedStep < 2 ? "waiting" : guidedStep === 2 ? "active" : "done"}
                 />
               </ol>
@@ -422,17 +425,17 @@ export function App() {
                   <div className={`protected-verdict ${reuseBlocked || delivered ? "protected-verdict--confirmed" : ""}`} aria-live="polite">
                     {reuseBlocked || delivered ? <ShieldCheck size={18} /> : <Fingerprint size={18} />}
                     <span>
-                      <b>{delivered ? "Verified on Hedera" : reuseBlocked ? "Reuse blocked" : "Fingerprint created"}</b>
+                      <b>{delivered ? "Payment confirmed" : reuseBlocked ? "Wrong report blocked" : "Payment label ready"}</b>
                       <small>{delivered
-                        ? "The exact request is delivered with public settlement evidence."
+                        ? "The right report is open and the payment has a public record."
                         : reuseBlocked
-                          ? `${alternate.label} does not match this payment's request proof.`
-                          : `This authorization is locked to ${selected.label}.`}</small>
+                          ? `This payment says “${selected.label} only,” so ${alternate.label} stays closed.`
+                          : `This payment can open ${selected.label} once.`}</small>
                     </span>
                   </div>
                 )}
                 {guidedStep === 2 && state.mode === "testnet" && (
-                  <p><Radio size={13} /> This submits a real Hedera testnet transaction.</p>
+                <p><Radio size={13} /> This makes a real payment using test currency.</p>
                 )}
                 <ActionButton
                   icon={guidedStep === 0
@@ -464,16 +467,16 @@ export function App() {
           </div>
           <div>
             <span className="eyebrow">DEMO VERDICT</span>
-            <h2>{delivered ? `${selected.label} unlocked` : reuseBlocked ? "Wrong-report reuse blocked" : challenge ? "Purchase fingerprint ready" : riskExposed ? "Payment-only authorization failed" : "Ready to expose the gap"}</h2>
+            <h2>{delivered ? `${selected.label} is open` : reuseBlocked ? "Wrong report stayed closed" : challenge ? "One-time payment label ready" : riskExposed ? "Unlabeled payment opened the wrong report" : "Ready to show the problem"}</h2>
             <p>{delivered
-              ? "The payment matched the intended request and the one-time authorization is now consumed."
+              ? "The payment label matched the report and cannot be used again."
               : reuseBlocked
-                ? `${alternate.label} was denied because its request does not match the payment fingerprint.`
+                ? `${alternate.label} was blocked because the payment label names ${selected.label}.`
                 : challenge
-                  ? "The request, payment terms, payer, expiry, and one-time nonce are bound together."
+                  ? `The payment now says “${selected.label} only” and can be used once.`
                   : riskExposed
-                    ? "The same payment unlocked a different request. ProofBound402 closes this authorization gap."
-                    : "Start with the payment-only check, then repeat the request with ProofBound402."}</p>
+                    ? "The payment proved money moved, but it did not say what it was allowed to open."
+                    : "Start by using one unlabeled payment on two same-price reports."}</p>
           </div>
           <span className={`decision-pill ${riskExposed && !challenge ? "decision-pill--danger" : ""}`}>
             {delivered ? "DELIVERED" : reuseBlocked ? "BLOCKED" : challenge ? "PROTECTED" : riskExposed ? "GAP EXPOSED" : "READY"}
@@ -490,26 +493,29 @@ export function App() {
               {state.events.length === 0 ? (
                 <div className="empty-trace"><CircleDot size={18} /><span>Actions and decisions will appear here.</span></div>
               ) : (
-                state.events.map((item, index) => (
-                  <article className={`trace trace--${item.tone}`} key={item.id}>
-                    <div className="trace__rail"><EventIcon event={item} /><span /></div>
-                    <div className="trace__body">
-                      <div className="trace__meta"><span>{String(index + 1).padStart(2, "0")}</span><time>{new Date(item.at).toLocaleTimeString([], { hour12: false })}</time></div>
-                      <h3>{item.title}</h3>
-                      <p>{item.detail}</p>
-                      {item.proof && (
-                        <details className="event-proof">
-                          <summary>Proof fields <ChevronDown size={13} /></summary>
-                          <div className="proof-row">
-                            {Object.entries(item.proof).map(([key, value]) => (
-                              <span key={key}><b>{key}</b><code title={value}>{shorten(value, 20, 12)}</code></span>
-                            ))}
-                          </div>
-                        </details>
-                      )}
-                    </div>
-                  </article>
-                ))
+                state.events.map((item, index) => {
+                  const copy = friendlyEvent(item);
+                  return (
+                    <article className={`trace trace--${item.tone}`} key={item.id}>
+                      <div className="trace__rail"><EventIcon event={item} /><span /></div>
+                      <div className="trace__body">
+                        <div className="trace__meta"><span>{String(index + 1).padStart(2, "0")}</span><time>{new Date(item.at).toLocaleTimeString([], { hour12: false })}</time></div>
+                        <h3>{copy.title}</h3>
+                        <p>{copy.detail}</p>
+                        {item.proof && (
+                          <details className="event-proof">
+                            <summary>Proof fields <ChevronDown size={13} /></summary>
+                            <div className="proof-row">
+                              {Object.entries(item.proof).map(([key, value]) => (
+                                <span key={key}><b>{key}</b><code title={value}>{shorten(value, 20, 12)}</code></span>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })
               )}
             </div>
           </div>
@@ -522,11 +528,11 @@ export function App() {
             <div className="public-proof__body">
               <div className="chain-proof__status">
                 <span className={challenge ? "is-ready" : ""}><Check size={13} /></span>
-                <p><b>Request fingerprint</b><code>{challenge ? shorten(challenge.memo, 20, 12) : "Created before payment"}</code></p>
+                <p><b>One-time payment label</b><code>{challenge ? "Ready for the selected report" : "Created before payment"}</code></p>
               </div>
               <div className="chain-proof__status">
                 <span className={state.evidence ? "is-ready" : ""}><Check size={13} /></span>
-                <p><b>Hedera transaction</b><code>{state.evidence ? shorten(state.evidence.transactionId, 18, 12) : "Awaiting settlement"}</code></p>
+                <p><b>Public payment record</b><code>{state.evidence ? shorten(state.evidence.transactionId, 18, 12) : "Awaiting payment"}</code></p>
                 {state.evidence?.hashscanTransactionUrl && <a href={state.evidence.hashscanTransactionUrl} target="_blank" rel="noreferrer" title="Open transaction in HashScan"><ExternalLink size={15} /></a>}
               </div>
               {state.evidence?.hcsTopicId && (
@@ -557,6 +563,8 @@ export function App() {
             <div><dt>One-time nonce</dt><dd title={challenge?.nonce}>{challenge?.nonce ?? "-"}</dd></div>
             <div><dt>Expires</dt><dd>{challenge ? new Date(challenge.expiresAt).toLocaleString() : "-"}</dd></div>
             <div><dt>Authorization state</dt><dd>{challenge?.status.toUpperCase() ?? "EMPTY"}</dd></div>
+            <div><dt>Hedera transaction</dt><dd>{state.evidence?.transactionId ?? "-"}</dd></div>
+            <div><dt>Consensus timestamp</dt><dd>{state.evidence?.consensusTimestamp ?? "-"}</dd></div>
             <div><dt>Last decision</dt><dd className={latestDecision?.tone === "danger" ? "text-danger" : "text-success"}>{latestDecision?.proof?.decision ?? "-"}</dd></div>
             <div><dt>Enforced invariant</dt><dd>{latestDecision?.proof?.invariant ?? "-"}</dd></div>
           </dl>
