@@ -37,6 +37,14 @@ The recipient must differ from the facilitator so Mirror Node can verify the exa
 
 Create and fund accounts through the [Hedera Portal](https://portal.hedera.com/), populate `.env`, export those variables in the server process, then run `npm run dev`. The dashboard switches from `SIMULATION` to `LIVE` automatically.
 
+If `.env` contains only a funded ECDSA `PRIV_KEY`, provision the distinct testnet roles once with:
+
+```bash
+npm run setup:testnet
+```
+
+The command is idempotent, never prints private keys, stores generated keys only in the ignored `.env`, and creates a facilitator with 10 testnet HBAR plus a recipient with 1 testnet HBAR. The server loads `.env` automatically at startup.
+
 The live integration test transfers testnet funds and therefore requires an explicit opt-in:
 
 ```bash
@@ -45,6 +53,8 @@ source .env
 set +a
 npm run test:live
 ```
+
+See [EVIDENCE.md](./EVIDENCE.md) for a public testnet transaction whose memo and exact transfer were independently verified through Mirror Node.
 
 The protected HTTP boundary is `POST /api/resources/basic` or `POST /api/resources/premium`. An unpaid request returns HTTP 402 with a base64-encoded `PAYMENT-REQUIRED` header. Retry with the x402 v2 payload in `PAYMENT-SIGNATURE`.
 
