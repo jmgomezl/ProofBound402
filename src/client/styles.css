@@ -155,7 +155,8 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .progress-step__marker { width: 25px; height: 25px; display: grid; place-items: center; font: 700 10px "JetBrains Mono Variable", monospace; border: 1px solid var(--ink); border-radius: 50%; }
 .progress-step--active .progress-step__marker { color: var(--paper); background: var(--ink); }
 .progress-step--done .progress-step__marker { background: var(--paper); }
-.progress-step > div { display: grid; gap: 2px; }
+.progress-step > div { display: grid; gap: 2px; padding-block: 12px; }
+.progress-step .flow-strip { margin: 9px 0 2px; }
 .progress-step b { font-size: 12px; }
 .progress-step div span { color: #4e572f; font-size: 10px; line-height: 1.3; }
 .guided-action { margin-top: 15px; }
