@@ -507,19 +507,27 @@ export function App() {
                 <ProgressStep
                   number={1}
                   title="Create a one-time label"
-                  detail={`Label this payment “${selected.label} only.”`}
+                  detail={guidedStep === 0
+                    ? `Label this payment “${selected.label} only.”`
+                    : `Done: this payment now says “${selected.label} only,” single use.`}
                   state={guidedStep === 0 ? "active" : "done"}
                 />
                 <ProgressStep
                   number={2}
                   title="Try the wrong report"
-                  detail={`Use the label on ${alternate.label}.`}
+                  detail={guidedStep < 2
+                    ? `Use the label on ${alternate.label}.`
+                    : `Done: ${alternate.label} refused this label — wrong report.`}
                   state={guidedStep < 1 ? "waiting" : guidedStep === 1 ? "active" : "done"}
                 />
                 <ProgressStep
                   number={3}
                   title="Open the right report"
-                  detail={state.mode === "testnet" ? `Pay ${price} on the public test network.` : "Check the right report in demo mode."}
+                  detail={guidedStep < 3
+                    ? (state.mode === "testnet" ? `Pay ${price} on the public test network.` : "Check the right report in demo mode.")
+                    : (state.mode === "testnet"
+                      ? `Done: ${price} settled on Hedera and Mirror Node confirmed it.`
+                      : "Done: simulated payment confirmed and recorded.")}
                   state={guidedStep < 2 ? "waiting" : guidedStep === 2 ? "active" : "done"}
                 />
               </ol>
@@ -556,6 +564,28 @@ export function App() {
                           { icon: <ShieldCheck size={15} />, label: "DELIVERY BLOCKED" },
                         ]}
                   />
+                )}
+                {delivered && (
+                  <div className="report-doc" aria-label={`${selected.label} report, unlocked`}>
+                    <div className="report-doc__head">
+                      <b>{selected.label}</b>
+                      <span>UNLOCKED</span>
+                    </div>
+                    <ul>
+                      {DEMO_RESOURCES[selectedResource].content.map((line, index) => (
+                        <li key={index} style={{ animationDelay: `${0.3 + index * 0.2}s` }}>{line}</li>
+                      ))}
+                    </ul>
+                    <footer>
+                      <span>PAID {price}</span>
+                      {state.evidence && <code title={state.evidence.transactionId}>{shorten(state.evidence.transactionId, 14, 8)}</code>}
+                      {state.evidence?.hashscanTransactionUrl && (
+                        <a href={state.evidence.hashscanTransactionUrl} target="_blank" rel="noreferrer">
+                          VIEW ON HASHSCAN <ExternalLink size={11} />
+                        </a>
+                      )}
+                    </footer>
+                  </div>
                 )}
                 {guidedStep === 2 && state.mode === "testnet" && (
                 <p><Radio size={13} /> This makes a real payment using test currency.</p>

@@ -3,6 +3,7 @@ import express from "express";
 import { parsePaymentPayload } from "@x402/core/schemas";
 import type { PaymentPayload } from "@x402/core/types";
 import { z } from "zod";
+import { DEMO_RESOURCES } from "../shared/contracts.js";
 import { DemoEngine } from "./demo-engine.js";
 
 const issueSchema = z.object({ resource: z.enum(["basic", "premium"]).default("basic") });
@@ -92,7 +93,12 @@ export function createApp(engine = new DemoEngine()) {
       response
         .status(200)
         .set("PAYMENT-RESPONSE", Buffer.from(JSON.stringify(paymentResponse)).toString("base64"))
-        .json({ ok: true, resource: parsedResource.data, payment: paymentResponse });
+        .json({
+          ok: true,
+          resource: parsedResource.data,
+          report: DEMO_RESOURCES[parsedResource.data].content,
+          payment: paymentResponse,
+        });
     } catch (error) {
       next(error);
     }
