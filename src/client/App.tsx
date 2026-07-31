@@ -338,6 +338,53 @@ export function App() {
         ? `${state.mode === "testnet" ? `Pay ${price} and open` : "Simulate payment and open"}`
         : "Report open";
 
+  const result = delivered
+    ? {
+        key: "delivered",
+        tone: "success",
+        status: "DELIVERED",
+        title: `${selected.label} is open`,
+        detail: "The payment label matched the report and cannot be used again.",
+      }
+    : reuseBlocked
+      ? {
+          key: "blocked",
+          tone: "success",
+          status: "BLOCKED",
+          title: "Wrong report stayed closed",
+          detail: `${alternate.label} was blocked because the payment label names ${selected.label}.`,
+        }
+      : challenge
+        ? {
+            key: "protected",
+            tone: "protected",
+            status: "PROTECTED",
+            title: "One-time payment label ready",
+            detail: `The payment now says “${selected.label} only” and can be used once.`,
+          }
+        : riskExposed
+          ? {
+              key: "danger",
+              tone: "danger",
+              status: "GAP EXPOSED",
+              title: "One unlabeled payment opened both reports",
+              detail: "The payment proved money moved, but it did not say what it was allowed to open.",
+            }
+          : {
+              key: "ready",
+              tone: "neutral",
+              status: "READY",
+              title: "Ready to show the problem",
+              detail: "Start by using one unlabeled payment on two same-price reports.",
+            };
+  const ResultIcon = delivered || reuseBlocked
+    ? ShieldCheck
+    : challenge
+      ? Fingerprint
+      : riskExposed
+        ? AlertTriangle
+        : CircleDot;
+
   return (
     <div className="shell">
       <header className="topbar">
@@ -382,8 +429,29 @@ export function App() {
           </div>
         </section>
 
-        <section className="demo-rail" aria-label="Demo progress">
-          <div className="demo-rail__label"><span className="eyebrow">SEE IT WORK</span><b aria-live="polite">{flowHint}</b></div>
+        <section className="demo-rail" aria-label="Demo progress and current result">
+          <div
+            className={`demo-rail__result demo-rail__result--${result.tone}`}
+            data-testid="live-result"
+            key={result.key}
+            role="status"
+          >
+            <span className="demo-rail__result-mark"><ResultIcon size={18} /></span>
+            <span className="demo-rail__result-copy">
+              <small>CURRENT RESULT · {result.status}</small>
+              <b>{result.title}</b>
+              <em>{flowHint}</em>
+            </span>
+            <button
+              type="button"
+              className="demo-rail__evidence-link"
+              aria-label={`View evidence for current result: ${result.title}`}
+              title="View evidence"
+              onClick={() => jumpTo("evidence")}
+            >
+              <ChevronDown size={17} />
+            </button>
+          </div>
           <div className="demo-rail__steps">
             <DemoMilestone
               number={1}
@@ -645,29 +713,7 @@ export function App() {
           </div>
         </section>
 
-        <section className="result-band" aria-live="polite">
-          <div className={`result-band__mark ${delivered || reuseBlocked ? "is-success" : riskExposed ? "is-danger" : ""}`}>
-            {delivered || reuseBlocked ? <ShieldCheck size={26} /> : riskExposed ? <AlertTriangle size={26} /> : <CircleDot size={26} />}
-          </div>
-          <div>
-            <span className="eyebrow">DEMO VERDICT</span>
-            <h2>{delivered ? `${selected.label} is open` : reuseBlocked ? "Wrong report stayed closed" : challenge ? "One-time payment label ready" : riskExposed ? "One unlabeled payment opened both reports" : "Ready to show the problem"}</h2>
-            <p>{delivered
-              ? "The payment label matched the report and cannot be used again."
-              : reuseBlocked
-                ? `${alternate.label} was blocked because the payment label names ${selected.label}.`
-                : challenge
-                  ? `The payment now says “${selected.label} only” and can be used once.`
-                  : riskExposed
-                    ? "The payment proved money moved, but it did not say what it was allowed to open."
-                    : "Start by using one unlabeled payment on two same-price reports."}</p>
-          </div>
-          <span className={`decision-pill ${riskExposed && !challenge ? "decision-pill--danger" : ""}`}>
-            {delivered ? "DELIVERED" : reuseBlocked ? "BLOCKED" : challenge ? "PROTECTED" : riskExposed ? "GAP EXPOSED" : "READY"}
-          </span>
-        </section>
-
-        <section className="evidence-grid">
+        <section className="evidence-grid" id="evidence">
           <div className="trace-panel">
             <div className="panel-heading">
               <div><FlaskConical size={17} /><h2>What happened</h2></div>
@@ -729,6 +775,18 @@ export function App() {
               {state.mode === "simulated" && <p className="simulation-note">DEMO IDS ONLY / TESTNET CREDENTIALS ENABLE PUBLIC SUBMISSION</p>}
             </div>
           </aside>
+        </section>
+
+        <section className="result-band" aria-live="polite">
+          <div className={`result-band__mark result-band__mark--${result.tone}`}>
+            <ResultIcon size={26} />
+          </div>
+          <div>
+            <span className="eyebrow">EVIDENCE CONCLUSION</span>
+            <h2>{result.title}</h2>
+            <p>{result.detail}</p>
+          </div>
+          <span className={`decision-pill decision-pill--${result.tone}`}>{result.status}</span>
         </section>
 
         <section className="why-band" aria-label="Why this matters">

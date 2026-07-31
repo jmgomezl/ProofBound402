@@ -20,6 +20,8 @@ Click **Show what goes wrong** and let the door sequence play: the paid-for repo
 
 **"Watch: the report it paid for opens — and the other one also opens. One payment, both doors. The server knew money moved — nothing more."**
 
+Point at the sticky **CURRENT RESULT · GAP EXPOSED** strip. It remains visible while the demo continues.
+
 ## 1:15 — Block it (60s)
 
 Card 02, "Payment opens one report."
@@ -34,6 +36,8 @@ Click **Try label on Alpha dossier**. Point at the blocked verdict.
 
 **"Rejected, with a machine-readable reason: RESOURCE_MISMATCH. The label doesn't match the request."**
 
+Point at **CURRENT RESULT · BLOCKED**: the result changed where the viewer was already looking, while the detailed event log remains below.
+
 ## 2:15 — Pay for real on Hedera (75s)
 
 **"Now the honest path — and this is a real transaction on Hedera testnet."**
@@ -43,6 +47,8 @@ Click **Pay 0.01 HBAR and open**. While it settles (~10s), talk:
 **"The label's SHA-256 digest is committed into the Hedera transaction memo before the payer signs. Settlement goes through the official x402 Hedera facilitator. And the server doesn't take the facilitator's word for it — it independently confirms through Mirror Node that the memo matches and the exact amount reached the exact recipient."**
 
 When it settles, the report itself unfolds with an **UNLOCKED** stamp — point at it, then click **VIEW ON HASHSCAN** in its footer.
+
+The sticky result now reads **CURRENT RESULT · DELIVERED**. Use its down-arrow once to show the event log, public evidence, and evidence conclusion together.
 
 **"Here's the transaction on HashScan. The memo starts with pb402:v1 — that's the request binding, publicly verifiable by anyone."**
 
