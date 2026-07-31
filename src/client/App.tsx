@@ -32,7 +32,7 @@ const FRIENDLY_RESULTS: Record<string, string> = {
   CHALLENGE_ISSUED: "One-time payment label created.",
   RESOURCE_MISMATCH: "Blocked. This payment is labeled for a different report.",
   DELIVERED: "Payment confirmed. The right report is open.",
-  UNBOUND_ATTACK_ACCEPTED: "Problem confirmed. The same payment opened the wrong report.",
+  UNBOUND_ATTACK_ACCEPTED: "Problem confirmed. One payment opened both reports.",
   RESET: "Demo cleared.",
 };
 
@@ -74,7 +74,7 @@ function friendlyEvent(event: DemoEvent): { title: string; detail: string } {
     return { title: "Payment accepted without a label", detail: "The server knows money moved, but not which report it should open." };
   }
   if (event.kind === "attack.accepted") {
-    return { title: "Wrong report opened", detail: "The unlabeled payment looked valid because both reports have the same price." };
+    return { title: "The wrong report opened too", detail: "The unlabeled payment looked valid because both reports have the same price." };
   }
   if (event.kind === "challenge.issued") {
     return { title: event.title.replace("Binding issued", "One-time label created"), detail: "The payment now names one report and can be used only once before it expires." };
@@ -94,16 +94,18 @@ function friendlyEvent(event: DemoEvent): { title: string; detail: string } {
 function FlowStrip({
   steps,
   tone,
+  baseDelay = 0.15,
 }: {
   steps: { icon: React.ReactNode; label: string }[];
   tone: "danger" | "success";
+  baseDelay?: number;
 }) {
   return (
     <div className={`flow-strip flow-strip--${tone}`} aria-hidden="true">
       <span className="flow-strip__title">BEHIND THE SCENES</span>
       {steps.map((step, index) => (
         <Fragment key={index}>
-          <span className="flow-strip__node" style={{ animationDelay: `${0.15 + index * 0.55}s` }}>
+          <span className="flow-strip__node" style={{ animationDelay: `${baseDelay + index * 0.55}s` }}>
             {step.icon}
             <small>{step.label}</small>
           </span>
@@ -274,6 +276,10 @@ export function App() {
     () => [...state.events].reverse().find((item) => item.kind.startsWith("attack.")),
     [state.events],
   );
+  const attackCount = useMemo(
+    () => state.events.filter((item) => item.kind === "attack.accepted").length,
+    [state.events],
+  );
 
   const runNextStep = () => {
     if (guidedStep === 0) {
@@ -389,7 +395,7 @@ export function App() {
             <DemoMilestone
               number={1}
               title="Show the problem"
-              detail="Wrong report opens"
+              detail="One payment opens both"
               state={riskExposed ? "done" : "active"}
               targetId="scenario-unbound"
               onJump={jumpTo}
@@ -432,30 +438,44 @@ export function App() {
               </div>
               <h3>Same payment opens both</h3>
               <p className="scenario__lead">Without a label, two reports with the same price look identical.</p>
-              <div className="receipt-compare">
-                <div><span>PAID FOR</span><b>Market pulse</b><code>{price}</code></div>
-                <ArrowRight size={18} />
-                <div className="receipt-compare__wrong"><span>UNLOCKS</span><b>Alpha dossier</b><code>SAME TERMS</code></div>
+              <div key={`attack-${attackCount}`}>
+                <div className="attack-stage">
+                  <div className="attack-ticket">
+                    <WalletCards size={17} />
+                    <span><small>ONE PAYMENT · MEANT FOR MARKET PULSE</small><b>{price}</b><em>NO LABEL</em></span>
+                  </div>
+                  <ArrowRight className="attack-stage__arrow" size={19} />
+                  <div className="attack-doors">
+                    <div className={`attack-door ${riskExposed ? "attack-door--open" : ""}`}>
+                      <span><small>THE REPORT IT PAID FOR</small><b>Market pulse</b></span>
+                      <strong>{riskExposed ? "OPENS" : "?"}</strong>
+                    </div>
+                    <div className={`attack-door ${riskExposed ? "attack-door--breached" : ""}`}>
+                      <span><small>DIFFERENT REPORT · SAME PRICE</small><b>Alpha dossier</b></span>
+                      <strong>{riskExposed ? "ALSO OPENS" : "?"}</strong>
+                    </div>
+                  </div>
+                </div>
+                <div className={`outcome outcome--danger ${riskExposed ? "outcome--revealed" : ""}`} aria-live="polite">
+                  <AlertTriangle size={17} />
+                  <span>
+                    <b>{riskExposed ? "One payment opened both reports" : "Will the second report open too?"}</b>
+                    <small>{riskExposed ? "The server saw amount, asset, and recipient — never which report." : "Run it: reuse the same payment on the second report."}</small>
+                  </span>
+                </div>
+                {riskExposed && (
+                  <FlowStrip
+                    tone="danger"
+                    baseDelay={1.9}
+                    steps={[
+                      { icon: <WalletCards size={15} />, label: "PAYMENT ARRIVES" },
+                      { icon: <ReceiptText size={15} />, label: "SERVER CHECKS PRICE ONLY" },
+                      { icon: <X size={15} />, label: "REQUEST NEVER CHECKED" },
+                      { icon: <AlertTriangle size={15} />, label: "WRONG REPORT OPENS" },
+                    ]}
+                  />
+                )}
               </div>
-              <div className={`outcome outcome--danger ${riskExposed ? "outcome--revealed" : ""}`} aria-live="polite">
-                <AlertTriangle size={17} />
-                <span>
-                  <b>{riskExposed ? "Reuse succeeded: wrong report delivered" : "Can the payment unlock the wrong report?"}</b>
-                  <small>{riskExposed ? "The payment did not say which report it was for." : "Try the first payment on the second report."}</small>
-                </span>
-              </div>
-              {riskExposed && (
-                <FlowStrip
-                  key={`unbound-${state.events.filter((item) => item.kind === "attack.accepted").length}`}
-                  tone="danger"
-                  steps={[
-                    { icon: <WalletCards size={15} />, label: "PAYMENT ARRIVES" },
-                    { icon: <ReceiptText size={15} />, label: "SERVER CHECKS PRICE ONLY" },
-                    { icon: <X size={15} />, label: "REQUEST NEVER CHECKED" },
-                    { icon: <AlertTriangle size={15} />, label: "WRONG REPORT OPENS" },
-                  ]}
-                />
-              )}
               <div className="scenario__actions">
                 <ActionButton
                   icon={<Play size={16} fill="currentColor" />}
@@ -633,7 +653,7 @@ export function App() {
           </div>
           <div>
             <span className="eyebrow">DEMO VERDICT</span>
-            <h2>{delivered ? `${selected.label} is open` : reuseBlocked ? "Wrong report stayed closed" : challenge ? "One-time payment label ready" : riskExposed ? "Unlabeled payment opened the wrong report" : "Ready to show the problem"}</h2>
+            <h2>{delivered ? `${selected.label} is open` : reuseBlocked ? "Wrong report stayed closed" : challenge ? "One-time payment label ready" : riskExposed ? "One unlabeled payment opened both reports" : "Ready to show the problem"}</h2>
             <p>{delivered
               ? "The payment label matched the report and cannot be used again."
               : reuseBlocked
