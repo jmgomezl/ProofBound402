@@ -560,26 +560,38 @@ export function App() {
                 {guidedStep === 2 && state.mode === "testnet" && (
                 <p><Radio size={13} /> This makes a real payment using test currency.</p>
                 )}
-                <ActionButton
-                  icon={guidedStep === 0
-                    ? <Fingerprint size={16} />
-                    : guidedStep === 1
-                      ? <ShieldCheck size={16} />
-                      : <Check size={16} />}
-                  variant="signal"
-                  onClick={runNextStep}
-                  disabled={busy !== null || guidedStep === 3}
-                  testId="next-protected-step"
-                  attention={riskExposed && guidedStep < 3}
-                >
-                  {busy === "issue"
-                    ? "Protecting..."
-                    : busy === "bound"
-                      ? "Testing reuse..."
-                      : busy === "settle"
-                        ? "Verifying payment..."
-                        : nextAction}
-                </ActionButton>
+                {guidedStep === 3 ? (
+                  <ActionButton
+                    icon={<RotateCcw size={16} />}
+                    variant="signal"
+                    onClick={() => run("reset", "/api/demo/reset")}
+                    disabled={busy !== null}
+                    testId="restart-demo"
+                  >
+                    {busy === "reset" ? "Resetting..." : "Start over with a new label"}
+                  </ActionButton>
+                ) : (
+                  <ActionButton
+                    icon={guidedStep === 0
+                      ? <Fingerprint size={16} />
+                      : guidedStep === 1
+                        ? <ShieldCheck size={16} />
+                        : <Check size={16} />}
+                    variant="signal"
+                    onClick={runNextStep}
+                    disabled={busy !== null}
+                    testId="next-protected-step"
+                    attention={riskExposed}
+                  >
+                    {busy === "issue"
+                      ? "Protecting..."
+                      : busy === "bound"
+                        ? "Testing reuse..."
+                        : busy === "settle"
+                          ? "Verifying payment..."
+                          : nextAction}
+                  </ActionButton>
+                )}
               </div>
             </article>
           </div>
