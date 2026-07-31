@@ -11,7 +11,8 @@ try {
 }
 
 const port = Number.parseInt(process.env.PORT ?? "4402", 10);
-const app = createApp(new DemoEngine(createSettlementAdapterFromEnv()));
+const settlement = createSettlementAdapterFromEnv();
+const app = createApp(() => new DemoEngine(settlement));
 
 app.listen(port, () => {
   console.log(`ProofBound402 API listening on http://localhost:${port}`);

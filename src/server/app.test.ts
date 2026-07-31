@@ -7,6 +7,28 @@ import { DemoEngine } from "./demo-engine.js";
 import { SimulatedSettlementAdapter } from "./settlement.js";
 
 describe("attack lab API", () => {
+  it("isolates interactive demo state by browser session", async () => {
+    const app = createApp(() => new DemoEngine());
+    const sessionA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const sessionB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
+    await request(app)
+      .post("/api/demo/unbound-attack")
+      .set("x-demo-session", sessionA)
+      .send();
+
+    const sameSession = await request(app)
+      .get("/api/demo/state")
+      .set("x-demo-session", sessionA);
+    const newSession = await request(app)
+      .get("/api/demo/state")
+      .set("x-demo-session", sessionB);
+
+    expect(sameSession.body.events).toHaveLength(2);
+    expect(sameSession.body.events.at(-1)).toMatchObject({ kind: "attack.accepted" });
+    expect(newSession.body).toMatchObject({ mode: "simulated", events: [] });
+  });
+
   it("shows the exploit, blocks the transplant, and delivers the bound request", async () => {
     const app = createApp();
 
