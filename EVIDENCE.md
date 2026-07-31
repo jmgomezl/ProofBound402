@@ -14,6 +14,21 @@ ProofBound402 completed an end-to-end x402 payment on Hedera testnet on 2026-07-
 | Explorer | [HashScan transaction](https://hashscan.io/testnet/transaction/0.0.9859769-1785521551-549343245) |
 | API evidence | [Hedera Mirror Node](https://testnet.mirrornode.hedera.com/api/v1/transactions/0.0.9859769-1785521551-549343245) |
 
+## The flow is repeatable
+
+A later dashboard-driven settlement on the same day, independently verified the same way:
+
+| Field | Verified value |
+| --- | --- |
+| Result | `SUCCESS` |
+| Mirror transaction ID | `0.0.9859769-1785531587-393752447` |
+| Consensus timestamp | `1785531594.016847104` |
+| Memo | `pb402:v1:7gW57glVd5hWdHRKHd-Wm22r9QGqiPtyGcf_dz5xqVk` |
+| Explorer | [HashScan transaction](https://hashscan.io/testnet/transaction/0.0.9859769-1785531587-393752447) |
+| API evidence | [Hedera Mirror Node](https://testnet.mirrornode.hedera.com/api/v1/transactions/0.0.9859769-1785531587-393752447) |
+
+Each run commits a different binding digest, so each on-chain memo is unique to its request.
+
 Run the opt-in integration test with funded testnet roles in the ignored `.env`:
 
 ```bash
