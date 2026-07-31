@@ -1,6 +1,7 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import type { BindingChallenge } from "../protocol/types.js";
+import { DEMO_RESOURCES } from "../shared/contracts.js";
 import { createApp } from "./app.js";
 import { DemoEngine } from "./demo-engine.js";
 import { SimulatedSettlementAdapter } from "./settlement.js";
@@ -18,16 +19,30 @@ describe("attack lab API", () => {
       .post("/api/demo/bound-challenge")
       .send({ resource: "basic" });
     expect(challenge.body.state.activeChallenge.memo).toMatch(/^pb402:v1:/);
+    expect(challenge.body.state.deliveredReport).toBeUndefined();
 
     const protectedAttempt = await request(app).post("/api/demo/bound-attack").send();
     expect(protectedAttempt.body).toMatchObject({ ok: true, code: "RESOURCE_MISMATCH" });
     expect(protectedAttempt.body.state.activeChallenge.status).toBe("issued");
+    expect(protectedAttempt.body.state.deliveredReport).toBeUndefined();
 
     const delivered = await request(app).post("/api/demo/bound-settle").send();
     expect(delivered.body).toMatchObject({ ok: true, code: "DELIVERED" });
     expect(delivered.body.state.activeChallenge.status).toBe("consumed");
     expect(delivered.body.state.evidence.memo).toBe(challenge.body.state.activeChallenge.memo);
+    expect(delivered.body.state.deliveredReport).toEqual({
+      resource: "basic",
+      content: DEMO_RESOURCES.basic.content,
+    });
     expect(delivered.body.state.mode).toBe("simulated");
+
+    const nextChallenge = await request(app)
+      .post("/api/demo/bound-challenge")
+      .send({ resource: "premium" });
+    expect(nextChallenge.body.state.deliveredReport).toBeUndefined();
+
+    const reset = await request(app).post("/api/demo/reset").send();
+    expect(reset.body.state.deliveredReport).toBeUndefined();
   });
 
   it("emits an x402 v2 challenge and binds the paid retry to the actual HTTP request", async () => {
@@ -62,6 +77,7 @@ describe("attack lab API", () => {
       .send(body);
     expect(delivered.status).toBe(200);
     expect(delivered.headers["payment-response"]).toBeTruthy();
+    expect(delivered.body.report).toEqual(DEMO_RESOURCES.basic.content);
     expect(delivered.body.payment).toMatchObject({ success: true, network: "hedera:testnet" });
   });
 

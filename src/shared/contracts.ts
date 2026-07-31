@@ -29,6 +29,11 @@ export const DEMO_RESOURCES = {
 export type ResourceId = keyof typeof DEMO_RESOURCES;
 export type ChainMode = "simulated" | "testnet";
 
+export interface DeliveredReport {
+  resource: ResourceId;
+  content: readonly string[];
+}
+
 export type DemoEventKind =
   | "challenge.issued"
   | "payment.created"
@@ -51,6 +56,7 @@ export interface DemoEvent {
 export interface DemoState {
   mode: ChainMode;
   events: DemoEvent[];
+  deliveredReport?: DeliveredReport;
   activeChallenge?: {
     id: string;
     resource: ResourceId;
