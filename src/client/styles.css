@@ -51,6 +51,7 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .intro__copy p { display: grid; gap: 5px; margin: 15px 0 0; max-width: 720px; color: var(--muted); font-size: 16px; line-height: 1.4; }
 .intro__copy p strong { color: var(--ink); font-size: 22px; font-weight: 790; }
 .intro__copy p span { color: #777870; }
+.intro__cta { margin-top: 22px; }
 .simple-model { background: #e1e2da; border-bottom: 1px solid var(--ink); }
 .simple-model__heading { min-height: 82px; display: flex; align-items: end; justify-content: space-between; gap: 30px; padding: 18px 30px 16px; border-bottom: 1px solid var(--line); }
 .simple-model__heading h2 { margin: 7px 0 0; font-size: 22px; line-height: 1.05; letter-spacing: 0; }
@@ -79,20 +80,21 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .simple-outcome--allow { color: #4c7100; }
 .simple-outcome--deny { color: #a82e1d; }
 
-.demo-rail { min-height: 78px; display: grid; grid-template-columns: 190px minmax(0, 1fr); align-items: center; gap: 24px; padding: 12px 30px; color: #fff; background: var(--ink); border-bottom: 1px solid var(--ink); }
+.demo-rail { position: sticky; top: 0; z-index: 6; min-height: 78px; display: grid; grid-template-columns: 300px minmax(0, 1fr); align-items: center; gap: 24px; padding: 12px 30px; color: #fff; background: var(--ink); border-bottom: 1px solid var(--ink); }
 .demo-rail__label { display: grid; gap: 4px; }
 .demo-rail__label .eyebrow { color: var(--acid); }
 .demo-rail__label b { font-size: 12px; }
 .demo-rail__steps { display: grid; grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr) 16px minmax(0, 1fr); align-items: center; gap: 12px; }
 .demo-rail__steps > svg { color: #5c5c55; }
-.demo-milestone { min-width: 0; display: grid; grid-template-columns: 27px minmax(0, 1fr); align-items: center; gap: 9px; opacity: .38; }
-.demo-milestone > span { width: 25px; height: 25px; display: grid; place-items: center; color: #fff; font: 700 9px "JetBrains Mono Variable", monospace; border: 1px solid #74746c; border-radius: 50%; }
-.demo-milestone p { min-width: 0; display: grid; gap: 2px; margin: 0; }
+.demo-milestone { min-width: 0; display: grid; grid-template-columns: 27px minmax(0, 1fr); align-items: center; gap: 9px; opacity: .38; padding: 0; color: inherit; text-align: left; background: none; border: 0; cursor: pointer; }
+.demo-milestone:hover > span:first-child { border-color: var(--acid); }
+.demo-milestone > span:first-child { width: 25px; height: 25px; display: grid; place-items: center; color: #fff; font: 700 9px "JetBrains Mono Variable", monospace; border: 1px solid #74746c; border-radius: 50%; }
+.demo-milestone__copy { min-width: 0; display: grid; gap: 2px; margin: 0; }
 .demo-milestone b { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .demo-milestone small { overflow: hidden; color: #a9a9a1; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .demo-milestone--active, .demo-milestone--done { opacity: 1; }
-.demo-milestone--active > span { color: var(--ink); background: var(--acid); border-color: var(--acid); animation: milestone-pulse 1.8s ease-in-out infinite; }
-.demo-milestone--done > span { color: var(--ink); background: #fff; border-color: #fff; }
+.demo-milestone--active > span:first-child { color: var(--ink); background: var(--acid); border-color: var(--acid); animation: milestone-pulse 1.8s ease-in-out infinite; }
+.demo-milestone--done > span:first-child { color: var(--ink); background: #fff; border-color: #fff; }
 @keyframes milestone-pulse { 50% { box-shadow: 0 0 0 4px rgba(198,255,50,.16); } }
 
 .comparison { border-bottom: 1px solid var(--ink); }
@@ -121,10 +123,10 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .outcome { min-height: 59px; display: flex; align-items: center; gap: 11px; margin: 14px 0; padding: 10px 12px; background: rgba(255,255,255,.45); border-left: 3px solid currentColor; }
 .outcome--danger { color: #9c2c1d; }
 .outcome--revealed { color: #fff; background: var(--red); animation: verdict-in 220ms ease-out; }
-.outcome--revealed small { color: #fff; opacity: .78; }
 .outcome span { display: grid; gap: 2px; }
 .outcome b { font-size: 12px; }
 .outcome small { color: var(--muted); font-size: 10px; line-height: 1.35; }
+.outcome--revealed small { color: #fff; }
 .resource-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 17px 0 16px; border: 1px solid rgba(23,23,20,.42); }
 .resource-picker button { min-width: 0; min-height: 61px; display: grid; gap: 3px; padding: 11px 13px; color: var(--ink); text-align: left; background: transparent; border: 0; cursor: pointer; }
 .resource-picker button + button { border-left: 1px solid rgba(23,23,20,.3); }
@@ -158,6 +160,10 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .action--dark { color: #fff; background: var(--ink); }
 .action--signal { color: var(--ink); background: var(--paper); }
 .action--outline { color: var(--ink); background: transparent; }
+.action--attention:not(:disabled) { animation: attention-pulse 1.6s ease-in-out infinite; }
+.action--attention:hover:not(:disabled) { animation: none; }
+@keyframes attention-pulse { 50% { box-shadow: 0 0 0 6px rgba(23, 23, 20, .22); } }
+.scenario__actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .result-band { min-height: 112px; display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 19px; padding: 20px 30px; background: #22221e; color: #fff; border-bottom: 1px solid var(--ink); }
 .result-band__mark { width: 48px; height: 48px; display: grid; place-items: center; color: #77776e; border: 1px solid #55554e; }
@@ -230,7 +236,7 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 @media (max-width: 980px) {
   .intro { grid-template-columns: 1fr; gap: 16px; align-items: start; padding-block: 25px; }
   .intro h1 { font-size: 56px; }
-  .demo-rail { grid-template-columns: 1fr; gap: 10px; padding-block: 16px; }
+  .demo-rail { position: static; grid-template-columns: 1fr; gap: 10px; padding-block: 16px; }
   .demo-rail__label { display: flex; align-items: center; justify-content: space-between; }
   .comparison-grid, .evidence-grid { grid-template-columns: 1fr; }
   .scenario:first-child, .trace-panel { border-right: 0; border-bottom: 1px solid var(--ink); }

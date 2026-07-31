@@ -98,6 +98,7 @@ function ActionButton({
   onClick,
   variant = "dark",
   testId,
+  attention = false,
 }: {
   children: React.ReactNode;
   icon: React.ReactNode;
@@ -105,10 +106,11 @@ function ActionButton({
   onClick: () => void;
   variant?: "dark" | "signal" | "outline";
   testId?: string;
+  attention?: boolean;
 }) {
   return (
     <button
-      className={`action action--${variant}`}
+      className={`action action--${variant}${attention ? " action--attention" : ""}`}
       data-testid={testId}
       disabled={disabled}
       onClick={onClick}
@@ -147,17 +149,24 @@ function DemoMilestone({
   title,
   detail,
   state,
+  targetId,
 }: {
   number: number;
   title: string;
   detail: string;
   state: "waiting" | "active" | "done";
+  targetId: string;
 }) {
   return (
-    <div className={`demo-milestone demo-milestone--${state}`}>
+    <button
+      type="button"
+      className={`demo-milestone demo-milestone--${state}`}
+      title="Jump to this step"
+      onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "center" })}
+    >
       <span>{state === "done" ? <Check size={14} /> : number}</span>
-      <p><b>{title}</b><small>{detail}</small></p>
-    </div>
+      <span className="demo-milestone__copy"><b>{title}</b><small>{detail}</small></span>
+    </button>
   );
 }
 
@@ -180,6 +189,12 @@ export function App() {
   useEffect(() => {
     if (state.activeChallenge) setSelectedResource(state.activeChallenge.resource);
   }, [state.activeChallenge?.id, state.activeChallenge?.resource]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 6_500);
+    return () => clearTimeout(timer);
+  }, [notice]);
 
   const run = useCallback(async (name: string, path: string, body: unknown = {}) => {
     setBusy(name);
@@ -233,6 +248,18 @@ export function App() {
     }
   };
 
+  const flowHint = delivered
+    ? "Done. The public record is below."
+    : !riskExposed
+      ? "Start here: show the problem in card 01."
+      : guidedStep === 0
+        ? "Next: create the payment label in card 02."
+        : guidedStep === 1
+          ? "Next: try the label on the wrong report."
+          : state.mode === "testnet"
+            ? "Next: pay and open the right report."
+            : "Next: simulate the payment and open the report.";
+
   const nextAction = guidedStep === 0
     ? `Create label for ${selected.label}`
     : guidedStep === 1
@@ -273,7 +300,15 @@ export function App() {
           <div className="intro__copy">
             <span className="eyebrow">ONE PAYMENT / ONE PERMISSION</span>
             <h1>ProofBound402</h1>
-            <p><strong>Pay once. Open one thing.</strong><span>Each payment gets a one-time label saying exactly what it can open.</span></p>
+            <p><strong>Pay once. Open one thing.</strong><span>When an AI agent pays per request, an unlabeled payment can open the wrong thing. Here every payment gets a one-time label saying exactly what it can open.</span></p>
+            <button
+              type="button"
+              className="action action--dark intro__cta"
+              onClick={() => document.getElementById("scenario-unbound")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            >
+              <Play size={16} fill="currentColor" />
+              <span>See it in three steps</span>
+            </button>
           </div>
         </section>
 
@@ -312,13 +347,14 @@ export function App() {
         </section>
 
         <section className="demo-rail" aria-label="Demo progress">
-          <div className="demo-rail__label"><span className="eyebrow">SEE IT WORK</span><b>Three short steps.</b></div>
+          <div className="demo-rail__label"><span className="eyebrow">SEE IT WORK</span><b aria-live="polite">{flowHint}</b></div>
           <div className="demo-rail__steps">
             <DemoMilestone
               number={1}
               title="Show the problem"
               detail="Wrong report opens"
               state={riskExposed ? "done" : "active"}
+              targetId="scenario-unbound"
             />
             <ArrowRight size={15} />
             <DemoMilestone
@@ -326,6 +362,7 @@ export function App() {
               title="Block the wrong report"
               detail="Label does not match"
               state={reuseBlocked ? "done" : riskExposed ? "active" : "waiting"}
+              targetId="scenario-bound"
             />
             <ArrowRight size={15} />
             <DemoMilestone
@@ -333,6 +370,7 @@ export function App() {
               title="Confirm the payment"
               detail="Public record"
               state={delivered ? "done" : reuseBlocked ? "active" : "waiting"}
+              targetId="scenario-bound"
             />
           </div>
         </section>
@@ -347,7 +385,7 @@ export function App() {
           </div>
 
           <div className="comparison-grid">
-            <article className="scenario scenario--unsafe">
+            <article className="scenario scenario--unsafe" id="scenario-unbound">
               <div className="scenario__header">
                 <span className="scenario__number">01</span>
                 <span className="risk"><AlertTriangle size={14} /> WITHOUT A LABEL</span>
@@ -366,17 +404,31 @@ export function App() {
                   <small>{riskExposed ? "The payment did not say which report it was for." : "Try the first payment on the second report."}</small>
                 </span>
               </div>
-              <ActionButton
-                icon={<Play size={16} fill="currentColor" />}
-                onClick={() => run("unbound", "/api/demo/unbound-attack")}
-                disabled={busy !== null}
-                testId="show-risk"
-              >
-                {busy === "unbound" ? "Checking..." : riskExposed ? "Show it again" : "Show what goes wrong"}
-              </ActionButton>
+              <div className="scenario__actions">
+                <ActionButton
+                  icon={<Play size={16} fill="currentColor" />}
+                  variant={riskExposed ? "outline" : "dark"}
+                  onClick={() => run("unbound", "/api/demo/unbound-attack")}
+                  disabled={busy !== null}
+                  testId="show-risk"
+                  attention={!riskExposed}
+                >
+                  {busy === "unbound" ? "Checking..." : riskExposed ? "Show it again" : "Show what goes wrong"}
+                </ActionButton>
+                {riskExposed && !delivered && (
+                  <ActionButton
+                    icon={<ArrowRight size={16} />}
+                    variant="dark"
+                    onClick={() => document.getElementById("scenario-bound")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                    testId="goto-protected"
+                  >
+                    Next: block it with a label
+                  </ActionButton>
+                )}
+              </div>
             </article>
 
-            <article className="scenario scenario--bound">
+            <article className="scenario scenario--bound" id="scenario-bound">
               <div className="scenario__header">
                 <span className="scenario__number">02</span>
                 <span className="guard"><LockKeyhole size={14} /> ONE-TIME LABEL</span>
@@ -447,6 +499,7 @@ export function App() {
                   onClick={runNextStep}
                   disabled={busy !== null || guidedStep === 3}
                   testId="next-protected-step"
+                  attention={riskExposed && guidedStep < 3}
                 >
                   {busy === "issue"
                     ? "Protecting..."
