@@ -151,11 +151,13 @@ function ProgressStep({
   title,
   detail,
   state,
+  children,
 }: {
   number: number;
   title: string;
   detail: string;
   state: "waiting" | "active" | "done";
+  children?: React.ReactNode;
 }) {
   return (
     <li className={`progress-step progress-step--${state}`}>
@@ -163,6 +165,7 @@ function ProgressStep({
       <div>
         <b>{title}</b>
         <span>{detail}</span>
+        {children}
       </div>
     </li>
   );
@@ -539,7 +542,20 @@ export function App() {
                     ? `Use the label on ${alternate.label}.`
                     : `Done: ${alternate.label} refused this label — wrong report.`}
                   state={guidedStep < 1 ? "waiting" : guidedStep === 1 ? "active" : "done"}
-                />
+                >
+                  {reuseBlocked && (
+                    <FlowStrip
+                      key={`blocked-${challenge?.id ?? "none"}`}
+                      tone="success"
+                      steps={[
+                        { icon: <Tag size={15} />, label: `LABEL SAYS ${selected.label.toUpperCase()}` },
+                        { icon: <Fingerprint size={15} />, label: "SERVER RECOMPUTES FROM REQUEST" },
+                        { icon: <X size={15} />, label: "LABEL DOES NOT MATCH" },
+                        { icon: <ShieldCheck size={15} />, label: "DELIVERY BLOCKED" },
+                      ]}
+                    />
+                  )}
+                </ProgressStep>
                 <ProgressStep
                   number={3}
                   title="Open the right report"
@@ -549,7 +565,20 @@ export function App() {
                       ? `Done: ${price} settled on Hedera and Mirror Node confirmed it.`
                       : "Done: simulated payment confirmed and recorded.")}
                   state={guidedStep < 2 ? "waiting" : guidedStep === 2 ? "active" : "done"}
-                />
+                >
+                  {delivered && (
+                    <FlowStrip
+                      key={`delivered-${challenge?.id ?? "none"}`}
+                      tone="success"
+                      steps={[
+                        { icon: <Tag size={15} />, label: "LABEL MATCHES REQUEST" },
+                        { icon: <Radio size={15} />, label: "HBAR + LABEL ON HEDERA" },
+                        { icon: <Fingerprint size={15} />, label: "MIRROR NODE CONFIRMS" },
+                        { icon: <Check size={15} />, label: "REPORT OPENS ONCE" },
+                      ]}
+                    />
+                  )}
+                </ProgressStep>
               </ol>
 
               <div className="guided-action">
@@ -565,25 +594,6 @@ export function App() {
                           : `This payment can open ${selected.label} once.`}</small>
                     </span>
                   </div>
-                )}
-                {(reuseBlocked || delivered) && (
-                  <FlowStrip
-                    key={`bound-${challenge?.id ?? "none"}-${delivered ? "delivered" : "blocked"}`}
-                    tone="success"
-                    steps={delivered
-                      ? [
-                          { icon: <Tag size={15} />, label: "LABEL MATCHES REQUEST" },
-                          { icon: <Radio size={15} />, label: "HBAR + LABEL ON HEDERA" },
-                          { icon: <Fingerprint size={15} />, label: "MIRROR NODE CONFIRMS" },
-                          { icon: <Check size={15} />, label: "REPORT OPENS ONCE" },
-                        ]
-                      : [
-                          { icon: <Tag size={15} />, label: `LABEL SAYS ${selected.label.toUpperCase()}` },
-                          { icon: <Fingerprint size={15} />, label: "SERVER RECOMPUTES FROM REQUEST" },
-                          { icon: <X size={15} />, label: "LABEL DOES NOT MATCH" },
-                          { icon: <ShieldCheck size={15} />, label: "DELIVERY BLOCKED" },
-                        ]}
-                  />
                 )}
                 {delivered && (
                   <div className="report-doc" aria-label={`${selected.label} report, unlocked`}>
