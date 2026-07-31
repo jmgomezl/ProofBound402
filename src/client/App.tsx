@@ -119,6 +119,25 @@ function ProgressStep({
   );
 }
 
+function DemoMilestone({
+  number,
+  title,
+  detail,
+  state,
+}: {
+  number: number;
+  title: string;
+  detail: string;
+  state: "waiting" | "active" | "done";
+}) {
+  return (
+    <div className={`demo-milestone demo-milestone--${state}`}>
+      <span>{state === "done" ? <Check size={14} /> : number}</span>
+      <p><b>{title}</b><small>{detail}</small></p>
+    </div>
+  );
+}
+
 export function App() {
   const [state, setState] = useState<DemoState>(EMPTY_STATE);
   const [selectedResource, setSelectedResource] = useState<ResourceId>("basic");
@@ -170,6 +189,7 @@ export function App() {
     return start < 0 ? [] : state.events.slice(start);
   }, [state.events]);
   const reuseBlocked = activeEvents.some((event) => event.kind === "attack.blocked");
+  const riskExposed = state.events.some((event) => event.kind === "attack.accepted");
   const delivered = challenge?.status === "consumed";
   const guidedStep = !challenge ? 0 : delivered ? 3 : reuseBlocked ? 2 : 1;
   const selected = DEMO_RESOURCES[selectedResource];
@@ -230,7 +250,7 @@ export function App() {
           <div className="intro__copy">
             <span className="eyebrow">PAYMENT PROOF / HEDERA</span>
             <h1>ProofBound402</h1>
-            <p>A payment that unlocks only the exact request it was made for.</p>
+            <p><span>x402 confirms the payment.</span> <strong>ProofBound402 proves what it authorized on-chain.</strong></p>
           </div>
           <div className="promise" aria-label="ProofBound402 authorization flow">
             <span><WalletCards size={18} /><b>Choose</b><small>a request</small></span>
@@ -238,6 +258,32 @@ export function App() {
             <span><Fingerprint size={18} /><b>Fingerprint</b><small>the intent</small></span>
             <ArrowRight size={16} />
             <span><FileCheck2 size={18} /><b>Unlock</b><small>only that request</small></span>
+          </div>
+        </section>
+
+        <section className="demo-rail" aria-label="Demo progress">
+          <div className="demo-rail__label"><span className="eyebrow">JUDGE FLOW</span><b>Three claims. One live proof.</b></div>
+          <div className="demo-rail__steps">
+            <DemoMilestone
+              number={1}
+              title="Expose the gap"
+              detail="Payment reused"
+              state={riskExposed ? "done" : "active"}
+            />
+            <ArrowRight size={15} />
+            <DemoMilestone
+              number={2}
+              title="Block the reuse"
+              detail="Request mismatch"
+              state={reuseBlocked ? "done" : riskExposed ? "active" : "waiting"}
+            />
+            <ArrowRight size={15} />
+            <DemoMilestone
+              number={3}
+              title="Verify on Hedera"
+              detail="Public evidence"
+              state={delivered ? "done" : reuseBlocked ? "active" : "waiting"}
+            />
           </div>
         </section>
 
@@ -263,9 +309,12 @@ export function App() {
                 <ArrowRight size={18} />
                 <div className="receipt-compare__wrong"><span>UNLOCKS</span><b>Alpha dossier</b><code>SAME TERMS</code></div>
               </div>
-              <div className="outcome outcome--danger">
+              <div className={`outcome outcome--danger ${riskExposed ? "outcome--revealed" : ""}`} aria-live="polite">
                 <AlertTriangle size={17} />
-                <span><b>Wrong report delivered</b><small>The server cannot tell the requests apart.</small></span>
+                <span>
+                  <b>{riskExposed ? "Reuse succeeded: wrong report delivered" : "Can the payment unlock the wrong report?"}</b>
+                  <small>{riskExposed ? "The payment-only check could not tell the requests apart." : "Replay the first receipt against the second request."}</small>
+                </span>
               </div>
               <ActionButton
                 icon={<Play size={16} fill="currentColor" />}
@@ -273,7 +322,7 @@ export function App() {
                 disabled={busy !== null}
                 testId="show-risk"
               >
-                {busy === "unbound" ? "Checking..." : "Show the risk"}
+                {busy === "unbound" ? "Checking..." : riskExposed ? "Replay the gap" : "Expose the payment-only gap"}
               </ActionButton>
             </article>
 
@@ -322,6 +371,19 @@ export function App() {
               </ol>
 
               <div className="guided-action">
+                {challenge && (
+                  <div className={`protected-verdict ${reuseBlocked || delivered ? "protected-verdict--confirmed" : ""}`} aria-live="polite">
+                    {reuseBlocked || delivered ? <ShieldCheck size={18} /> : <Fingerprint size={18} />}
+                    <span>
+                      <b>{delivered ? "Verified on Hedera" : reuseBlocked ? "Reuse blocked" : "Fingerprint created"}</b>
+                      <small>{delivered
+                        ? "The exact request is delivered with public settlement evidence."
+                        : reuseBlocked
+                          ? `${alternate.label} does not match this payment's request proof.`
+                          : `This authorization is locked to ${selected.label}.`}</small>
+                    </span>
+                  </div>
+                )}
                 {guidedStep === 2 && state.mode === "testnet" && (
                   <p><Radio size={13} /> This submits a real Hedera testnet transaction.</p>
                 )}
@@ -350,22 +412,24 @@ export function App() {
         </section>
 
         <section className="result-band" aria-live="polite">
-          <div className={`result-band__mark ${delivered || reuseBlocked ? "is-success" : ""}`}>
-            {delivered || reuseBlocked ? <ShieldCheck size={26} /> : <CircleDot size={26} />}
+          <div className={`result-band__mark ${delivered || reuseBlocked ? "is-success" : riskExposed ? "is-danger" : ""}`}>
+            {delivered || reuseBlocked ? <ShieldCheck size={26} /> : riskExposed ? <AlertTriangle size={26} /> : <CircleDot size={26} />}
           </div>
           <div>
-            <span className="eyebrow">PROTECTED RESULT</span>
-            <h2>{delivered ? `${selected.label} unlocked` : reuseBlocked ? "Wrong-report reuse blocked" : challenge ? "Purchase fingerprint ready" : "Ready to protect a purchase"}</h2>
+            <span className="eyebrow">DEMO VERDICT</span>
+            <h2>{delivered ? `${selected.label} unlocked` : reuseBlocked ? "Wrong-report reuse blocked" : challenge ? "Purchase fingerprint ready" : riskExposed ? "Payment-only authorization failed" : "Ready to expose the gap"}</h2>
             <p>{delivered
               ? "The payment matched the intended request and the one-time authorization is now consumed."
               : reuseBlocked
                 ? `${alternate.label} was denied because its request does not match the payment fingerprint.`
                 : challenge
                   ? "The request, payment terms, payer, expiry, and one-time nonce are bound together."
-                  : "Choose a report above to create its one-time authorization."}</p>
+                  : riskExposed
+                    ? "The same payment unlocked a different request. ProofBound402 closes this authorization gap."
+                    : "Start with the payment-only check, then repeat the request with ProofBound402."}</p>
           </div>
-          <span className={`decision-pill ${latestDecision?.tone === "danger" ? "decision-pill--danger" : ""}`}>
-            {delivered ? "DELIVERED" : reuseBlocked ? "BLOCKED" : challenge ? "PROTECTED" : "WAITING"}
+          <span className={`decision-pill ${riskExposed && !challenge ? "decision-pill--danger" : ""}`}>
+            {delivered ? "DELIVERED" : reuseBlocked ? "BLOCKED" : challenge ? "PROTECTED" : riskExposed ? "GAP EXPOSED" : "READY"}
           </span>
         </section>
 
@@ -406,19 +470,25 @@ export function App() {
           <aside className="public-proof">
             <div className="panel-heading">
               <div><ReceiptText size={17} /><h2>Public evidence</h2></div>
-              <span>{state.evidence ? "VERIFIED" : "PENDING"}</span>
+              <span>{state.evidence ? "VERIFIED" : challenge ? "BOUND" : "READY"}</span>
             </div>
             <div className="public-proof__body">
+              <div className="chain-proof__status">
+                <span className={challenge ? "is-ready" : ""}><Check size={13} /></span>
+                <p><b>Request fingerprint</b><code>{challenge ? shorten(challenge.memo, 20, 12) : "Created before payment"}</code></p>
+              </div>
               <div className="chain-proof__status">
                 <span className={state.evidence ? "is-ready" : ""}><Check size={13} /></span>
                 <p><b>Hedera transaction</b><code>{state.evidence ? shorten(state.evidence.transactionId, 18, 12) : "Awaiting settlement"}</code></p>
                 {state.evidence?.hashscanTransactionUrl && <a href={state.evidence.hashscanTransactionUrl} target="_blank" rel="noreferrer" title="Open transaction in HashScan"><ExternalLink size={15} /></a>}
               </div>
-              <div className="chain-proof__status">
-                <span className={state.evidence?.hcsTopicId ? "is-ready" : ""}><Check size={13} /></span>
-                <p><b>Delivery receipt</b><code>{state.evidence?.hcsTopicId ? `HCS ${state.evidence.hcsTopicId} / ${state.evidence.hcsSequenceNumber}` : "HCS receipt pending / issue #2"}</code></p>
-                {state.evidence?.hashscanTopicUrl && <a href={state.evidence.hashscanTopicUrl} target="_blank" rel="noreferrer" title="Open topic in HashScan"><ExternalLink size={15} /></a>}
-              </div>
+              {state.evidence?.hcsTopicId && (
+                <div className="chain-proof__status">
+                  <span className="is-ready"><Check size={13} /></span>
+                  <p><b>HCS delivery receipt</b><code>{`${state.evidence.hcsTopicId} / ${state.evidence.hcsSequenceNumber}`}</code></p>
+                  {state.evidence.hashscanTopicUrl && <a href={state.evidence.hashscanTopicUrl} target="_blank" rel="noreferrer" title="Open topic in HashScan"><ExternalLink size={15} /></a>}
+                </div>
+              )}
               {state.mode === "simulated" && <p className="simulation-note">DEMO IDS ONLY / TESTNET CREDENTIALS ENABLE PUBLIC SUBMISSION</p>}
             </div>
           </aside>
