@@ -92,6 +92,7 @@ export function App() {
     [state.events],
   );
   const challenge = state.activeChallenge;
+  const paymentTerms = challenge?.paymentRequired;
 
   return (
     <div className="shell">
@@ -141,8 +142,8 @@ export function App() {
             </div>
             <h2>Settlement-only authorization</h2>
             <div className="route-stack">
-              <div className="route"><span>01</span><code>POST /reports/market-pulse</code><b>1M tℏ</b></div>
-              <div className="route"><span>02</span><code>POST /reports/alpha-dossier</code><b>1M tℏ</b></div>
+              <div className="route"><span>01</span><code>POST /reports/market-pulse</code><b>{paymentTerms?.amount ?? "1000000"} ATOMIC</b></div>
+              <div className="route"><span>02</span><code>POST /reports/alpha-dossier</code><b>{paymentTerms?.amount ?? "1000000"} ATOMIC</b></div>
             </div>
             <div className="scenario__flow">
               <span>PAY 01</span><ArrowRight size={15} /><span>REDEEM 02</span><ArrowRight size={15} /><b>DELIVER</b>
@@ -235,6 +236,8 @@ export function App() {
             </div>
             <dl>
               <div><dt>Binding digest</dt><dd title={challenge?.digest}>{challenge ? shorten(challenge.digest, 18, 14) : "-"}</dd></div>
+              <div><dt>x402 requirement</dt><dd>{paymentTerms ? `V${paymentTerms.x402Version} / ${paymentTerms.scheme.toUpperCase()}` : "-"}</dd></div>
+              <div><dt>Fee payer</dt><dd>{paymentTerms?.feePayer ?? "-"}</dd></div>
               <div><dt>Nonce</dt><dd title={challenge?.nonce}>{challenge ? shorten(challenge.nonce, 14, 8) : "-"}</dd></div>
               <div><dt>Expires</dt><dd>{challenge ? new Date(challenge.expiresAt).toLocaleTimeString([], { hour12: false }) : "-"}</dd></div>
               <div><dt>Decision</dt><dd className={latestDecision?.tone === "danger" ? "text-danger" : "text-success"}>{latestDecision?.proof?.decision ?? "-"}</dd></div>
@@ -249,8 +252,8 @@ export function App() {
                 {state.evidence?.hashscanTransactionUrl && <a href={state.evidence.hashscanTransactionUrl} target="_blank" rel="noreferrer" title="Open transaction in HashScan"><ExternalLink size={15} /></a>}
               </div>
               <div className="chain-proof__status">
-                <span className={state.evidence ? "is-ready" : ""}><Check size={13} /></span>
-                <p><b>HCS receipt</b><code>{state.evidence ? `${state.evidence.hcsTopicId} / ${state.evidence.hcsSequenceNumber}` : "Pending"}</code></p>
+                <span className={state.evidence?.hcsTopicId ? "is-ready" : ""}><Check size={13} /></span>
+                <p><b>HCS receipt</b><code>{state.evidence?.hcsTopicId ? `${state.evidence.hcsTopicId} / ${state.evidence.hcsSequenceNumber}` : "Pending / issue #2"}</code></p>
                 {state.evidence?.hashscanTopicUrl && <a href={state.evidence.hashscanTopicUrl} target="_blank" rel="noreferrer" title="Open topic in HashScan"><ExternalLink size={15} /></a>}
               </div>
               {state.mode === "simulated" && <p className="simulation-note">SIMULATED IDs / CONNECT TESTNET CREDENTIALS FOR SUBMISSION EVIDENCE</p>}
