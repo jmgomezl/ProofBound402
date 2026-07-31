@@ -17,7 +17,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEMO_RESOURCES,
   type ApiResult,
@@ -91,26 +91,47 @@ function friendlyEvent(event: DemoEvent): { title: string; detail: string } {
   return { title: event.title, detail: event.detail };
 }
 
+function mirrorTransactionUrl(transactionId: string): string | undefined {
+  const [payer, timestamp] = transactionId.split("@");
+  if (!payer || !timestamp) return undefined;
+  return `https://testnet.mirrornode.hedera.com/api/v1/transactions/${payer}-${timestamp.replace(".", "-")}`;
+}
+
 function FlowStrip({
   steps,
   tone,
   baseDelay = 0.15,
 }: {
-  steps: { icon: React.ReactNode; label: string }[];
+  steps: { icon: React.ReactNode; label: string; href?: string }[];
   tone: "danger" | "success";
   baseDelay?: number;
 }) {
   return (
-    <div className={`flow-strip flow-strip--${tone}`} aria-hidden="true">
+    <div className={`flow-strip flow-strip--${tone}`}>
       <span className="flow-strip__title">BEHIND THE SCENES</span>
-      {steps.map((step, index) => (
-        <Fragment key={index}>
-          <span className="flow-strip__node" style={{ animationDelay: `${baseDelay + index * 0.55}s` }}>
+      {steps.map((step, index) => {
+        const style = { animationDelay: `${baseDelay + index * 0.55}s` };
+        return step.href ? (
+          <a
+            key={index}
+            className="flow-strip__node flow-strip__node--link"
+            style={style}
+            href={step.href}
+            target="_blank"
+            rel="noreferrer"
+            title="Open the public on-chain evidence"
+          >
+            {step.icon}
+            <small>{step.label}</small>
+            <ExternalLink size={10} className="flow-strip__ext" />
+          </a>
+        ) : (
+          <span key={index} className="flow-strip__node" style={style}>
             {step.icon}
             <small>{step.label}</small>
           </span>
-        </Fragment>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -344,7 +365,7 @@ export function App() {
       <main>
         <section className="intro">
           <div className="intro__copy">
-            <span className="eyebrow">ONE PAYMENT / ONE PERMISSION</span>
+            <span className="eyebrow">HEDERA / X402</span>
             <h1>ProofBound402</h1>
             <p><strong>Pay once. Open one thing.</strong><span>When an AI agent pays per request, an unlabeled payment can open the wrong thing. Here every payment gets a one-time label saying exactly what it can open.</span></p>
             <button
@@ -355,40 +376,6 @@ export function App() {
               <Play size={16} fill="currentColor" />
               <span>See it in three steps</span>
             </button>
-          </div>
-        </section>
-
-        <section className="simple-model" aria-labelledby="model-title">
-          <div className="simple-model__heading">
-            <div>
-              <span className="eyebrow">THE WHOLE IDEA</span>
-              <h2 id="model-title">The payment says what it is for</h2>
-            </div>
-            <p>For this purchase, the label says: “{selected.label} only.”</p>
-          </div>
-          <div className="simple-model__flow">
-            <div className="simple-purchase">
-              <WalletCards size={22} />
-              <span><small>YOU PAY FOR</small><b>{selected.label}</b><code>{price}</code></span>
-            </div>
-            <ArrowRight className="simple-model__arrow" size={21} />
-            <div className={`payment-label ${challenge ? "payment-label--ready" : ""}`}>
-              <Tag size={23} />
-              <span><small>ONE-TIME PAYMENT LABEL</small><b>Only for {selected.label}</b><em>{challenge ? "READY" : "PREVIEW"}</em></span>
-            </div>
-            <ArrowRight className="simple-model__arrow" size={21} />
-            <div className="simple-outcomes" aria-label="What the payment can open">
-              <div className="simple-outcome simple-outcome--allow">
-                <Check size={17} />
-                <span><small>RIGHT REPORT</small><b>{selected.label}</b></span>
-                <strong>OPEN</strong>
-              </div>
-              <div className="simple-outcome simple-outcome--deny">
-                <X size={17} />
-                <span><small>WRONG REPORT</small><b>{alternate.label}</b></span>
-                <strong>BLOCK</strong>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -424,15 +411,7 @@ export function App() {
           </div>
         </section>
 
-        <section className="comparison" aria-labelledby="comparison-title">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">THE DIFFERENCE</span>
-              <h2 id="comparison-title">Can one payment open the wrong report?</h2>
-            </div>
-            <p>Without a label they look identical. With a label, only the right report opens.</p>
-          </div>
-
+        <section className="comparison" aria-label="The demo">
           <div className="comparison-grid">
             <article className={`scenario scenario--unsafe ${flashCard === "scenario-unbound" ? "scenario--flash" : ""}`} id="scenario-unbound">
               <div className="scenario__header">
@@ -572,8 +551,14 @@ export function App() {
                       tone="success"
                       steps={[
                         { icon: <Tag size={15} />, label: "LABEL MATCHES REQUEST" },
-                        { icon: <Radio size={15} />, label: "HBAR + LABEL ON HEDERA" },
-                        { icon: <Fingerprint size={15} />, label: "MIRROR NODE CONFIRMS" },
+                        { icon: <Radio size={15} />, label: "HBAR + LABEL ON HEDERA", href: state.evidence?.hashscanTransactionUrl },
+                        {
+                          icon: <Fingerprint size={15} />,
+                          label: "MIRROR NODE CONFIRMS",
+                          href: state.mode === "testnet" && state.evidence
+                            ? mirrorTransactionUrl(state.evidence.transactionId)
+                            : undefined,
+                        },
                         { icon: <Check size={15} />, label: "REPORT OPENS ONCE" },
                       ]}
                     />
@@ -777,7 +762,9 @@ export function App() {
             <div><dt>One-time nonce</dt><dd title={challenge?.nonce}>{challenge?.nonce ?? "-"}</dd></div>
             <div><dt>Expires</dt><dd>{challenge ? new Date(challenge.expiresAt).toLocaleString() : "-"}</dd></div>
             <div><dt>Authorization state</dt><dd>{challenge?.status.toUpperCase() ?? "EMPTY"}</dd></div>
-            <div><dt>Hedera transaction</dt><dd>{state.evidence?.transactionId ?? "-"}</dd></div>
+            <div><dt>Hedera transaction</dt><dd>{state.evidence?.hashscanTransactionUrl
+              ? <a href={state.evidence.hashscanTransactionUrl} target="_blank" rel="noreferrer">{state.evidence.transactionId} <ExternalLink size={10} /></a>
+              : state.evidence?.transactionId ?? "-"}</dd></div>
             <div><dt>Consensus timestamp</dt><dd>{state.evidence?.consensusTimestamp ?? "-"}</dd></div>
             <div><dt>Last decision</dt><dd className={latestDecision?.tone === "danger" ? "text-danger" : "text-success"}>{latestDecision?.proof?.decision ?? "-"}</dd></div>
             <div><dt>Enforced invariant</dt><dd>{latestDecision?.proof?.invariant ?? "-"}</dd></div>
