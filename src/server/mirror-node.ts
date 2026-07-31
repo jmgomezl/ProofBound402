@@ -41,6 +41,14 @@ export interface MirrorVerificationOptions {
   intervalMs?: number;
 }
 
+export function toMirrorTransactionId(transactionId: string): string {
+  const match = /^(\d+\.\d+\.\d+)@(\d+)\.(\d+)$/.exec(transactionId);
+  if (!match) {
+    throw new Error("Invalid Hedera transaction ID");
+  }
+  return `${match[1]}-${match[2]}-${match[3]}`;
+}
+
 function netForAccount(transfers: MirrorTransfer[], account: string): bigint {
   return transfers
     .filter((transfer) => transfer.account === account)
@@ -94,7 +102,8 @@ export async function waitForMirrorSettlement(
   const baseUrl = options.baseUrl ?? "https://testnet.mirrornode.hedera.com";
   const maxAttempts = options.maxAttempts ?? 12;
   const intervalMs = options.intervalMs ?? 1_000;
-  const url = `${baseUrl}/api/v1/transactions/${encodeURIComponent(expected.transactionId)}`;
+  const mirrorTransactionId = toMirrorTransactionId(expected.transactionId);
+  const url = `${baseUrl}/api/v1/transactions/${mirrorTransactionId}`;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const response = await fetchImpl(url, { headers: { accept: "application/json" } });

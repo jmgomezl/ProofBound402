@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { waitForMirrorSettlement } from "./mirror-node.js";
+import { toMirrorTransactionId, waitForMirrorSettlement } from "./mirror-node.js";
 
 const expected = {
   transactionId: "0.0.9009@1700000000.000000001",
@@ -27,6 +27,12 @@ function mirrorResponse(overrides: Record<string, unknown> = {}) {
 }
 
 describe("Mirror Node settlement verification", () => {
+  it("converts an SDK transaction ID to the Mirror Node path format", () => {
+    expect(toMirrorTransactionId(expected.transactionId)).toBe(
+      "0.0.9009-1700000000-000000001",
+    );
+  });
+
   it("waits for indexing then confirms result, memo, and transfers", async () => {
     const fetchImpl = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(JSON.stringify({ transactions: [] }), { status: 200 }))
@@ -45,6 +51,10 @@ describe("Mirror Node settlement verification", () => {
       result: "SUCCESS",
     });
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "https://testnet.mirrornode.hedera.com/api/v1/transactions/0.0.9009-1700000000-000000001",
+      { headers: { accept: "application/json" } },
+    );
   });
 
   it("fails closed when the public memo differs", async () => {

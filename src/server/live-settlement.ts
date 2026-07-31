@@ -16,7 +16,7 @@ import {
   assertTransactionBinding,
   createProofBoundHederaSigner,
 } from "../protocol/hedera-x402.js";
-import { waitForMirrorSettlement } from "./mirror-node.js";
+import { toMirrorTransactionId, waitForMirrorSettlement } from "./mirror-node.js";
 import {
   SimulatedSettlementAdapter,
   buildPaymentRequired,
@@ -36,6 +36,11 @@ interface LiveSettlementConfig {
   mirrorNodeUrl?: string;
   challengeTtlSeconds?: number;
   resourceBaseUrl?: string;
+}
+
+function parseEcdsaPrivateKey(value: string): PrivateKey {
+  const normalized = value.startsWith("0x") ? value : `0x${value}`;
+  return PrivateKey.fromStringECDSA(normalized);
 }
 
 export class LiveHederaSettlementAdapter implements SettlementAdapter {
@@ -74,9 +79,9 @@ export class LiveHederaSettlementAdapter implements SettlementAdapter {
       resourceBaseUrl: config.resourceBaseUrl ?? "http://localhost:4402",
     };
     this.#payerKey = config.payerPrivateKey
-      ? PrivateKey.fromString(config.payerPrivateKey)
+      ? parseEcdsaPrivateKey(config.payerPrivateKey)
       : undefined;
-    this.#facilitatorKey = PrivateKey.fromString(config.facilitatorPrivateKey);
+    this.#facilitatorKey = parseEcdsaPrivateKey(config.facilitatorPrivateKey);
     this.#mirrorNodeUrl = config.mirrorNodeUrl ?? "https://testnet.mirrornode.hedera.com";
   }
 
@@ -160,7 +165,7 @@ export class LiveHederaSettlementAdapter implements SettlementAdapter {
       transactionId: settlement.transaction,
       consensusTimestamp: mirrored.consensusTimestamp,
       memo: mirrored.memo,
-      hashscanTransactionUrl: `https://hashscan.io/testnet/transaction/${encodeURIComponent(settlement.transaction)}`,
+      hashscanTransactionUrl: `https://hashscan.io/testnet/transaction/${toMirrorTransactionId(settlement.transaction)}`,
     };
   }
 }

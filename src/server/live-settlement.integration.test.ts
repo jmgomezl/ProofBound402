@@ -21,6 +21,8 @@ describe.runIf(runLive)("live Hedera x402 settlement", () => {
     });
     const evidence = await adapter.settle(challenge);
 
+    console.info(`Live Hedera transaction: ${evidence.hashscanTransactionUrl}`);
+
     expect(evidence.memo).toBe(challenge.memo);
     expect(evidence.transactionId).toMatch(/^0\.0\.\d+@\d+\.\d+$/);
     expect(evidence.consensusTimestamp).toMatch(/^\d+\.\d+$/);
