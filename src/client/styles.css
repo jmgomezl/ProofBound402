@@ -164,6 +164,18 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .action--attention:hover:not(:disabled) { animation: none; }
 @keyframes attention-pulse { 50% { box-shadow: 0 0 0 6px rgba(23, 23, 20, .22); } }
 .scenario__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.flow-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin: 0 0 14px; }
+.scenario--unsafe .flow-strip { margin: 14px 0; }
+.flow-strip__title { grid-column: 1 / -1; color: var(--muted); font: 700 8px "JetBrains Mono Variable", monospace; letter-spacing: .04em; }
+.flow-strip__node { min-width: 0; display: grid; gap: 5px; justify-items: center; align-content: start; padding: 10px 6px 9px; text-align: center; background: var(--paper); border: 1px solid var(--line); opacity: 0; animation: flow-node-in 360ms ease-out forwards; }
+.flow-strip__node small { font: 700 8px/1.35 "JetBrains Mono Variable", monospace; }
+.flow-strip--danger .flow-strip__node:last-child { color: #fff; background: var(--red); border-color: var(--red); }
+.flow-strip--success .flow-strip__node:last-child { color: var(--ink); background: var(--acid); border-color: var(--ink); }
+@keyframes flow-node-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .flow-strip__node { animation-duration: 1ms; animation-delay: 0ms !important; }
+  .action--attention:not(:disabled), .demo-milestone--active > span:first-child { animation: none; }
+}
 
 .result-band { min-height: 112px; display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 19px; padding: 20px 30px; background: #22221e; color: #fff; border-bottom: 1px solid var(--ink); }
 .result-band__mark { width: 48px; height: 48px; display: grid; place-items: center; color: #77776e; border: 1px solid #55554e; }
@@ -271,6 +283,7 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
   .receipt-compare { grid-template-columns: 1fr; }
   .receipt-compare > svg { transform: rotate(90deg); justify-self: center; }
   .resource-picker { grid-template-columns: 1fr; }
+  .flow-strip { grid-template-columns: 1fr 1fr; }
   .resource-picker button + button { border-left: 0; border-top: 1px solid rgba(23,23,20,.3); }
   .resource-picker small { white-space: normal; }
   .result-band { grid-template-columns: 42px minmax(0, 1fr); gap: 13px; padding: 18px; }
