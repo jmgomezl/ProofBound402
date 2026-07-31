@@ -27,6 +27,23 @@ import {
 } from "../shared/contracts";
 
 const EMPTY_STATE: DemoState = { mode: "simulated", events: [] };
+const DEMO_SESSION_STORAGE_KEY = "proofbound402.demo-session";
+
+let fallbackDemoSessionId: string | undefined;
+
+function getDemoSessionId(): string {
+  try {
+    const existing = sessionStorage.getItem(DEMO_SESSION_STORAGE_KEY);
+    if (existing) return existing;
+
+    const created = crypto.randomUUID();
+    sessionStorage.setItem(DEMO_SESSION_STORAGE_KEY, created);
+    return created;
+  } catch {
+    fallbackDemoSessionId ??= crypto.randomUUID();
+    return fallbackDemoSessionId;
+  }
+}
 
 const FRIENDLY_RESULTS: Record<string, string> = {
   CHALLENGE_ISSUED: "One-time payment label created.",
@@ -39,7 +56,10 @@ const FRIENDLY_RESULTS: Record<string, string> = {
 async function request<T>(path: string, body?: unknown): Promise<T> {
   const response = await fetch(path, {
     method: body === undefined ? "GET" : "POST",
-    headers: body === undefined ? undefined : { "content-type": "application/json" },
+    headers: {
+      "x-demo-session": getDemoSessionId(),
+      ...(body === undefined ? {} : { "content-type": "application/json" }),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const data = (await response.json()) as T;
