@@ -238,6 +238,13 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .chain-proof__status a { color: var(--ink); }
 .simulation-note { margin: 14px 0 0; color: #846700; font: 700 8px/1.5 "JetBrains Mono Variable", monospace; }
 
+.why-band { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--ink); }
+.why-band__item { display: grid; gap: 7px; align-content: start; padding: 22px 24px 24px; }
+.why-band__item + .why-band__item { border-left: 1px solid var(--line); }
+.why-band__item svg { color: var(--acid-dark); }
+.why-band__item b { font-size: 13px; }
+.why-band__item p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+
 .technical-panel { background: #d5d6cf; }
 .technical-panel > summary { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 24px; cursor: pointer; list-style: none; }
 .technical-panel > summary::-webkit-details-marker { display: none; }
@@ -298,6 +305,8 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
   .receipt-compare > svg { transform: rotate(90deg); justify-self: center; }
   .resource-picker { grid-template-columns: 1fr; }
   .flow-strip { grid-template-columns: 1fr 1fr; }
+  .why-band { grid-template-columns: 1fr; }
+  .why-band__item + .why-band__item { border-left: 0; border-top: 1px solid var(--line); }
   .resource-picker button + button { border-left: 0; border-top: 1px solid rgba(23,23,20,.3); }
   .resource-picker small { white-space: normal; }
   .result-band { grid-template-columns: 42px minmax(0, 1fr); gap: 13px; padding: 18px; }
