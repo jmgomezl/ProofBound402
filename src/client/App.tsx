@@ -17,7 +17,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEMO_RESOURCES,
   type ApiResult,
@@ -89,6 +89,28 @@ function friendlyEvent(event: DemoEvent): { title: string; detail: string } {
     return { title: event.title.replace("authorized", "opened"), detail: "The requested report matches the payment label, so access is granted." };
   }
   return { title: event.title, detail: event.detail };
+}
+
+function FlowStrip({
+  steps,
+  tone,
+}: {
+  steps: { icon: React.ReactNode; label: string }[];
+  tone: "danger" | "success";
+}) {
+  return (
+    <div className={`flow-strip flow-strip--${tone}`} aria-hidden="true">
+      <span className="flow-strip__title">BEHIND THE SCENES</span>
+      {steps.map((step, index) => (
+        <Fragment key={index}>
+          <span className="flow-strip__node" style={{ animationDelay: `${0.15 + index * 0.55}s` }}>
+            {step.icon}
+            <small>{step.label}</small>
+          </span>
+        </Fragment>
+      ))}
+    </div>
+  );
 }
 
 function ActionButton({
@@ -387,7 +409,7 @@ export function App() {
           <div className="comparison-grid">
             <article className="scenario scenario--unsafe" id="scenario-unbound">
               <div className="scenario__header">
-                <span className="scenario__number">01</span>
+                <span className="scenario__number">STEP 1 · START HERE</span>
                 <span className="risk"><AlertTriangle size={14} /> WITHOUT A LABEL</span>
               </div>
               <h3>Same payment opens both</h3>
@@ -404,6 +426,18 @@ export function App() {
                   <small>{riskExposed ? "The payment did not say which report it was for." : "Try the first payment on the second report."}</small>
                 </span>
               </div>
+              {riskExposed && (
+                <FlowStrip
+                  key={`unbound-${state.events.filter((item) => item.kind === "attack.accepted").length}`}
+                  tone="danger"
+                  steps={[
+                    { icon: <WalletCards size={15} />, label: "PAYMENT ARRIVES" },
+                    { icon: <ReceiptText size={15} />, label: "SERVER CHECKS PRICE ONLY" },
+                    { icon: <X size={15} />, label: "REQUEST NEVER CHECKED" },
+                    { icon: <AlertTriangle size={15} />, label: "WRONG REPORT OPENS" },
+                  ]}
+                />
+              )}
               <div className="scenario__actions">
                 <ActionButton
                   icon={<Play size={16} fill="currentColor" />}
@@ -430,7 +464,7 @@ export function App() {
 
             <article className="scenario scenario--bound" id="scenario-bound">
               <div className="scenario__header">
-                <span className="scenario__number">02</span>
+                <span className="scenario__number">STEPS 2–3 · THE FIX</span>
                 <span className="guard"><LockKeyhole size={14} /> ONE-TIME LABEL</span>
               </div>
               <h3>Payment opens one report</h3>
@@ -485,6 +519,25 @@ export function App() {
                           : `This payment can open ${selected.label} once.`}</small>
                     </span>
                   </div>
+                )}
+                {(reuseBlocked || delivered) && (
+                  <FlowStrip
+                    key={`bound-${challenge?.id ?? "none"}-${delivered ? "delivered" : "blocked"}`}
+                    tone="success"
+                    steps={delivered
+                      ? [
+                          { icon: <Tag size={15} />, label: "LABEL MATCHES REQUEST" },
+                          { icon: <Radio size={15} />, label: "HBAR + LABEL ON HEDERA" },
+                          { icon: <Fingerprint size={15} />, label: "MIRROR NODE CONFIRMS" },
+                          { icon: <Check size={15} />, label: "REPORT OPENS ONCE" },
+                        ]
+                      : [
+                          { icon: <Tag size={15} />, label: `LABEL SAYS ${selected.label.toUpperCase()}` },
+                          { icon: <Fingerprint size={15} />, label: "SERVER RECOMPUTES FROM REQUEST" },
+                          { icon: <X size={15} />, label: "LABEL DOES NOT MATCH" },
+                          { icon: <ShieldCheck size={15} />, label: "DELIVERY BLOCKED" },
+                        ]}
+                  />
                 )}
                 {guidedStep === 2 && state.mode === "testnet" && (
                 <p><Radio size={13} /> This makes a real payment using test currency.</p>
