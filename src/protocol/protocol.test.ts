@@ -53,6 +53,20 @@ describe("one-time request binding", () => {
     expect(store.redeem(challenge.id, challenge.memo, intent, 1_700_000_002_000).code).toBe("REPLAY");
   });
 
+  it("reserves atomically and can release a failed settlement", () => {
+    const store = new ChallengeStore();
+    const challenge = store.issue(intent, 120_000, 1_700_000_000_000);
+
+    expect(store.reserve(challenge.id, challenge.memo, intent, 1_700_000_001_000).code).toBe("BOUND");
+    expect(store.get(challenge.id)?.status).toBe("reserved");
+    expect(store.reserve(challenge.id, challenge.memo, intent, 1_700_000_001_100).code).toBe("REPLAY");
+    expect(store.release(challenge.id)).toBe(true);
+    expect(store.get(challenge.id)?.status).toBe("issued");
+    expect(store.reserve(challenge.id, challenge.memo, intent, 1_700_000_001_200).code).toBe("BOUND");
+    expect(store.commit(challenge.id, 1_700_000_001_300)).toBe(true);
+    expect(store.get(challenge.id)?.status).toBe("consumed");
+  });
+
   it("blocks cross-resource payment transplant", () => {
     const store = new ChallengeStore();
     const challenge = store.issue(intent, 120_000, 1_700_000_000_000);

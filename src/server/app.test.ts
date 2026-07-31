@@ -1,6 +1,9 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
+import type { BindingChallenge } from "../protocol/types.js";
 import { createApp } from "./app.js";
+import { DemoEngine } from "./demo-engine.js";
+import { SimulatedSettlementAdapter } from "./settlement.js";
 
 describe("attack lab API", () => {
   it("shows the exploit, blocks the transplant, and delivers the bound request", async () => {
@@ -25,5 +28,56 @@ describe("attack lab API", () => {
     expect(delivered.body.state.activeChallenge.status).toBe("consumed");
     expect(delivered.body.state.evidence.memo).toBe(challenge.body.state.activeChallenge.memo);
     expect(delivered.body.state.mode).toBe("simulated");
+  });
+
+  it("emits an x402 v2 challenge and binds the paid retry to the actual HTTP request", async () => {
+    const app = createApp();
+    const body = { query: "hbar liquidity" };
+    const unpaid = await request(app).post("/api/resources/basic").send(body);
+
+    expect(unpaid.status).toBe(402);
+    expect(unpaid.headers["payment-required"]).toBeTruthy();
+    expect(unpaid.body).toMatchObject({
+      x402Version: 2,
+      accepts: [{ scheme: "exact", network: "hedera:testnet" }],
+    });
+    expect(unpaid.body.accepts[0].extra.proofBound402.memo).toMatch(/^pb402:v1:/);
+
+    const paymentPayload = {
+      x402Version: 2,
+      accepted: unpaid.body.accepts[0],
+      payload: { transaction: "simulated-payment" },
+    };
+    const paymentHeader = Buffer.from(JSON.stringify(paymentPayload)).toString("base64");
+    const transplanted = await request(app)
+      .post("/api/resources/premium")
+      .set("PAYMENT-SIGNATURE", paymentHeader)
+      .send(body);
+    expect(transplanted.status).toBe(402);
+    expect(transplanted.body).toMatchObject({ ok: false, code: "RESOURCE_MISMATCH" });
+
+    const delivered = await request(app)
+      .post("/api/resources/basic")
+      .set("PAYMENT-SIGNATURE", paymentHeader)
+      .send(body);
+    expect(delivered.status).toBe(200);
+    expect(delivered.headers["payment-response"]).toBeTruthy();
+    expect(delivered.body.payment).toMatchObject({ success: true, network: "hedera:testnet" });
+  });
+
+  it("releases the nonce reservation when settlement fails", async () => {
+    class FailingSettlementAdapter extends SimulatedSettlementAdapter {
+      override async settle(_challenge: BindingChallenge): Promise<never> {
+        throw new Error("settlement unavailable");
+      }
+    }
+
+    const app = createApp(new DemoEngine(new FailingSettlementAdapter()));
+    await request(app).post("/api/demo/bound-challenge").send({ resource: "basic" });
+    const failed = await request(app).post("/api/demo/bound-settle").send();
+    expect(failed.status).toBe(500);
+
+    const state = await request(app).get("/api/demo/state");
+    expect(state.body.activeChallenge.status).toBe("issued");
   });
 });

@@ -44,7 +44,7 @@ export function verifyBinding(
   actualIntent: RequestIntent,
   now = Date.now(),
 ): VerificationResult {
-  if (challenge.status === "consumed") {
+  if (challenge.status !== "issued") {
     return failure("REPLAY", "This one-time binding has already been redeemed.");
   }
   if (now > challenge.claims.expiresAt) {

@@ -7,7 +7,9 @@
     "dev": "concurrently -k -n api,web -c yellow,cyan \"tsx watch src/server/index.ts\" \"vite --host 0.0.0.0\"",
     "dev:api": "tsx watch src/server/index.ts",
     "dev:web": "vite --host 0.0.0.0",
+    "setup:testnet": "node scripts/provision-testnet.mjs",
     "test": "vitest run --config vitest.config.ts",
+    "test:live": "RUN_HEDERA_LIVE_TESTS=1 node --env-file=.env node_modules/vitest/vitest.mjs run --config vitest.config.ts src/server/live-settlement.integration.test.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit",
     "build": "tsc -p tsconfig.server.json && vite build",
@@ -16,7 +18,7 @@
   "dependencies": {
     "@fontsource-variable/archivo": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
-    "@hashgraph/sdk": "^2.75.0",
+    "@hiero-ledger/sdk": "2.85.0",
     "@x402/core": "2.20.0",
     "@x402/hedera": "2.20.0",
     "cors": "^2.8.5",
