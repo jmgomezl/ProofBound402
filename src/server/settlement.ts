@@ -1,4 +1,4 @@
-import { createHash, randomInt } from "node:crypto";
+import { randomInt } from "node:crypto";
 import type { PaymentPayload, PaymentRequired, PaymentRequirements } from "@x402/core/types";
 import type { BindingChallenge } from "../protocol/types.js";
 
@@ -98,16 +98,11 @@ export class SimulatedSettlementAdapter implements SettlementAdapter {
   async settle(challenge: BindingChallenge, _paymentPayload?: PaymentPayload): Promise<SettlementEvidence> {
     const seconds = Math.floor(Date.now() / 1_000);
     const nanos = randomInt(100_000_000, 999_999_999);
-    const evidenceHash = createHash("sha256")
-      .update(`${challenge.memo}:${challenge.claims.nonce}:${seconds}.${nanos}`)
-      .digest("hex");
 
     return {
       transactionId: `0.0.402402@${seconds}.${nanos}`,
       consensusTimestamp: `${seconds}.${nanos}`,
       memo: challenge.memo,
-      hcsTopicId: "0.0.402402",
-      hcsSequenceNumber: String(Number.parseInt(evidenceHash.slice(0, 6), 16)),
     };
   }
 }

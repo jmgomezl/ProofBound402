@@ -21,7 +21,7 @@ ProofBound402 computes a canonical SHA-256 digest over:
 
 The complete 32-byte digest is base64url encoded as `pb402:v1:<digest>` and written to the Hedera `TransferTransaction` memo before the payer signs it. The resource server extracts that signed memo, recomputes the binding from the actual inbound request, and consumes the nonce only after all invariants match.
 
-The full evidence object is published separately to HCS after settlement. Raw request bodies and secrets are never written to public ledger data.
+Publishing the full evidence object to HCS after settlement is planned future work. Raw request bodies and secrets are never written to public ledger data.
 
 ## Consequences
 
