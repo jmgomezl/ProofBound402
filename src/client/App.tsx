@@ -4,8 +4,11 @@ import {
   Check,
   ChevronDown,
   CircleDot,
+  Clock3,
+  Coins,
   ExternalLink,
   FileCheck2,
+  FileText,
   Fingerprint,
   FlaskConical,
   LockKeyhole,
@@ -14,7 +17,9 @@ import {
   ReceiptText,
   RotateCcw,
   ShieldCheck,
+  UserRound,
   WalletCards,
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -250,14 +255,56 @@ export function App() {
           <div className="intro__copy">
             <span className="eyebrow">PAYMENT PROOF / HEDERA</span>
             <h1>ProofBound402</h1>
-            <p><span>x402 confirms the payment.</span> <strong>ProofBound402 proves what it authorized on-chain.</strong></p>
+            <p><strong>Payment is not permission.</strong><span>x402 confirms money moved. ProofBound402 also proves the one exact request it may unlock.</span></p>
           </div>
-          <div className="promise" aria-label="ProofBound402 authorization flow">
-            <span><WalletCards size={18} /><b>Choose</b><small>a request</small></span>
-            <ArrowRight size={16} />
-            <span><Fingerprint size={18} /><b>Fingerprint</b><small>the intent</small></span>
-            <ArrowRight size={16} />
-            <span><FileCheck2 size={18} /><b>Unlock</b><small>only that request</small></span>
+          <div className="permission-equation" aria-label="Payment is different from permission">
+            <span><WalletCards size={20} /><b>Payment</b><small>Money moved</small></span>
+            <X size={19} />
+            <span className="permission-equation__proof"><LockKeyhole size={20} /><b>Permission</b><small>Exact request approved</small></span>
+          </div>
+        </section>
+
+        <section className="binding-explainer" aria-labelledby="binding-title">
+          <div className="binding-explainer__heading">
+            <div>
+              <span className="eyebrow">WHAT GETS SEALED INTO THE PAYMENT</span>
+              <h2 id="binding-title">One fingerprint describes the whole purchase</h2>
+            </div>
+            <p>Change any sealed fact and the payment no longer grants access.</p>
+          </div>
+          <div className="binding-map">
+            <div className="binding-facts" aria-label="Facts included in the request fingerprint">
+              <span><FileText size={15} /><small>REPORT</small><b>{selected.label}</b></span>
+              <span><ArrowRight size={15} /><small>REQUEST</small><b title={`POST ${selected.path}`}>POST request</b></span>
+              <span><FileCheck2 size={15} /><small>CONTENT</small><b title="JSON body / 24-hour window">JSON / 24h window</b></span>
+              <span><Coins size={15} /><small>PRICE</small><b>{price}</b></span>
+              <span><UserRound size={15} /><small>BUYER + NETWORK</small><b>Hedera testnet</b></span>
+              <span><Clock3 size={15} /><small>SAFETY</small><b>Expires / one use</b></span>
+            </div>
+
+            <ArrowRight className="binding-map__arrow" size={21} />
+
+            <div className={`fingerprint-core ${challenge ? "fingerprint-core--ready" : ""}`}>
+              <Fingerprint size={28} />
+              <span>PAYMENT FINGERPRINT</span>
+              <code title={challenge?.memo}>{challenge ? shorten(challenge.memo, 19, 12) : "pb402:v1:<fingerprint>"}</code>
+              <small>{challenge ? "Sealed before the buyer signs" : "Created before payment"}</small>
+            </div>
+
+            <ArrowRight className="binding-map__arrow" size={21} />
+
+            <div className="permission-results" aria-label="Authorization outcomes">
+              <div className="permission-result permission-result--allow">
+                <Check size={17} />
+                <span><small>EXACT SAME REQUEST</small><b>{selected.label}</b></span>
+                <strong>UNLOCK</strong>
+              </div>
+              <div className="permission-result permission-result--deny">
+                <ShieldCheck size={17} />
+                <span><small>ANY FACT CHANGES</small><b title={`${alternate.label} or edited request data`}>Other report or data</b></span>
+                <strong>BLOCK</strong>
+              </div>
+            </div>
           </div>
         </section>
 
