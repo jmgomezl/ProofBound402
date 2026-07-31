@@ -52,34 +52,6 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .intro__copy p strong { color: var(--ink); font-size: 22px; font-weight: 790; }
 .intro__copy p span { color: #777870; }
 .intro__cta { margin-top: 22px; }
-.simple-model { background: #e1e2da; border-bottom: 1px solid var(--ink); }
-.simple-model__heading { min-height: 82px; display: flex; align-items: end; justify-content: space-between; gap: 30px; padding: 18px 30px 16px; border-bottom: 1px solid var(--line); }
-.simple-model__heading h2 { margin: 7px 0 0; font-size: 22px; line-height: 1.05; letter-spacing: 0; }
-.simple-model__heading > p { max-width: 360px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; text-align: right; }
-.simple-model__flow { min-height: 132px; display: grid; grid-template-columns: minmax(160px, .72fr) 22px minmax(190px, .9fr) 22px minmax(240px, 1fr); align-items: center; gap: 12px; padding: 18px 30px 20px; }
-.simple-model__arrow { color: #8f9088; }
-.simple-purchase, .payment-label { min-width: 0; min-height: 82px; display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 10px; padding: 12px 14px; }
-.simple-purchase { background: var(--paper); border: 1px solid var(--line); }
-.simple-purchase > svg { color: var(--muted); }
-.simple-purchase > span, .payment-label > span { min-width: 0; display: grid; gap: 3px; }
-.simple-purchase small, .payment-label small, .simple-outcome small { color: var(--muted); font: 8px "JetBrains Mono Variable", monospace; }
-.simple-purchase b, .payment-label b { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.simple-purchase code { color: var(--muted); font-size: 9px; }
-.payment-label { color: #fff; background: var(--ink); border-bottom: 4px solid #77786f; }
-.payment-label > svg { color: var(--acid); }
-.payment-label small { color: #aaa9a2; }
-.payment-label em { width: fit-content; padding: 2px 4px; color: var(--ink); background: #aaa9a2; font: normal 800 7px "JetBrains Mono Variable", monospace; }
-.payment-label--ready { border-color: var(--acid); animation: label-ready 220ms ease-out; }
-.payment-label--ready em { background: var(--acid); }
-@keyframes label-ready { from { transform: translateY(3px); opacity: .65; } }
-.simple-outcomes { display: grid; gap: 7px; }
-.simple-outcome { min-width: 0; min-height: 48px; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 8px 10px; background: var(--paper); border-left: 3px solid currentColor; }
-.simple-outcome > span { min-width: 0; display: grid; gap: 2px; }
-.simple-outcome b { overflow: hidden; color: var(--ink); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.simple-outcome strong { font: 800 9px "JetBrains Mono Variable", monospace; }
-.simple-outcome--allow { color: #4c7100; }
-.simple-outcome--deny { color: #a82e1d; }
-
 .demo-rail { position: sticky; top: 0; z-index: 6; min-height: 78px; display: grid; grid-template-columns: 300px minmax(0, 1fr); align-items: center; gap: 24px; padding: 12px 30px; color: #fff; background: var(--ink); border-bottom: 1px solid var(--ink); }
 .demo-rail__label { display: grid; gap: 4px; }
 .demo-rail__label .eyebrow { color: var(--acid); }
@@ -98,9 +70,6 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 @keyframes milestone-pulse { 50% { box-shadow: 0 0 0 4px rgba(198,255,50,.16); } }
 
 .comparison { border-bottom: 1px solid var(--ink); }
-.section-heading { min-height: 104px; display: flex; align-items: end; justify-content: space-between; gap: 30px; padding: 23px 30px 20px; border-bottom: 1px solid var(--line); }
-.section-heading h2 { margin: 8px 0 0; font-size: 26px; line-height: 1.05; letter-spacing: 0; }
-.section-heading > p { max-width: 430px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; text-align: right; }
 .comparison-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
 .scenario { min-width: 0; padding: 27px 30px 30px; }
 .scenario:first-child { border-right: 1px solid var(--ink); }
@@ -185,6 +154,10 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
 .flow-strip__title { grid-column: 1 / -1; color: var(--muted); font: 700 8px "JetBrains Mono Variable", monospace; letter-spacing: .04em; }
 .flow-strip__node { min-width: 0; display: grid; gap: 5px; justify-items: center; align-content: start; padding: 10px 6px 9px; text-align: center; background: var(--paper); border: 1px solid var(--line); opacity: 0; animation: flow-node-in 360ms ease-out forwards; }
 .flow-strip__node small { font: 700 8px/1.35 "JetBrains Mono Variable", monospace; }
+a.flow-strip__node { position: relative; color: inherit; text-decoration: none; transition: transform 120ms ease, box-shadow 120ms ease; }
+a.flow-strip__node:hover { border-color: var(--ink); box-shadow: 2px 2px 0 var(--ink); transform: translate(-1px, -1px); }
+.flow-strip__ext { position: absolute; top: 4px; right: 4px; color: var(--muted); }
+.technical-panel dd a { display: inline-flex; align-items: center; gap: 3px; color: inherit; }
 .flow-strip--danger .flow-strip__node:last-child { color: #fff; background: var(--red); border-color: var(--red); }
 .flow-strip--success .flow-strip__node:last-child { color: var(--ink); background: var(--acid); border-color: var(--ink); }
 @keyframes flow-node-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
@@ -288,15 +261,6 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
   .demo-rail__label { display: flex; align-items: center; justify-content: space-between; }
   .comparison-grid, .evidence-grid { grid-template-columns: 1fr; }
   .scenario:first-child, .trace-panel { border-right: 0; border-bottom: 1px solid var(--ink); }
-  .section-heading { align-items: start; }
-  .section-heading > p { text-align: left; }
-}
-
-@media (max-width: 700px) {
-  .simple-model__heading { min-height: 0; display: grid; gap: 9px; padding: 18px; }
-  .simple-model__heading > p { text-align: left; }
-  .simple-model__flow { grid-template-columns: 1fr; gap: 8px; padding: 16px 18px 19px; }
-  .simple-model__arrow { justify-self: center; transform: rotate(90deg); }
 }
 
 @media (max-width: 620px) {
@@ -306,14 +270,11 @@ main { width: min(1440px, 100%); margin: 0 auto; border-inline: 1px solid var(--
   .intro h1 { font-size: 40px; }
   .intro__copy p { font-size: 16px; }
   .intro__copy p strong { font-size: 19px; }
-  .simple-model__heading h2 { font-size: 20px; }
   .demo-rail { padding: 15px 18px; }
   .demo-rail__steps { grid-template-columns: 1fr; gap: 7px; }
   .demo-rail__steps > svg { display: none; }
   .demo-milestone { min-height: 34px; }
   .demo-milestone b, .demo-milestone small { white-space: normal; }
-  .section-heading { min-height: 0; display: grid; gap: 12px; padding: 20px 18px; }
-  .section-heading h2 { font-size: 22px; }
   .scenario { padding: 23px 18px 25px; }
   .scenario h3 { font-size: 22px; }
   .attack-stage { grid-template-columns: 1fr; }
