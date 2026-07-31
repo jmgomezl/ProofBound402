@@ -766,7 +766,7 @@ export function App() {
             <div><dt>Expires</dt><dd>{challenge ? new Date(challenge.expiresAt).toLocaleString() : "-"}</dd></div>
             <div><dt>Authorization state</dt><dd>{challenge?.status.toUpperCase() ?? "EMPTY"}</dd></div>
             <div><dt>Hedera transaction</dt><dd>{state.evidence?.hashscanTransactionUrl
-              ? <a href={state.evidence.hashscanTransactionUrl} target="_blank" rel="noreferrer">{state.evidence.transactionId} <ExternalLink size={10} /></a>
+              ? <a href={state.evidence.hashscanTransactionUrl} target="_blank" rel="noreferrer"><span>{state.evidence.transactionId}</span><ExternalLink size={10} /></a>
               : state.evidence?.transactionId ?? "-"}</dd></div>
             <div><dt>Consensus timestamp</dt><dd>{state.evidence?.consensusTimestamp ?? "-"}</dd></div>
             <div><dt>Last decision</dt><dd className={latestDecision?.tone === "danger" ? "text-danger" : "text-success"}>{latestDecision?.proof?.decision ?? "-"}</dd></div>
