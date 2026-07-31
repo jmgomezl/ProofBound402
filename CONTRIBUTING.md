@@ -11,6 +11,10 @@ ProofBound402 uses GitHub issues, focused branches, and pull requests to keep ev
 5. Record user-visible changes in `CHANGELOG.md` and architecture/security decisions in `docs/adr/`.
 6. Require `npm test`, `npm run typecheck`, and `npm run build` before merge.
 
+## Required checks
+
+Protect `main` by requiring the `Quality`, `Dependency review`, and `Secret scan` checks from `.github/workflows/ci.yml`. Require branches to be up to date before merge and do not allow those checks to be bypassed for ordinary changes.
+
 ## Security changes
 
 Security-relevant pull requests must state:
