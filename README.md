@@ -29,6 +29,12 @@ Each memo is the SHA-256 binding of a different HTTP request, and each transfer 
 
 The dashboard is an attack lab: it runs the exploit against a deliberately unbound integration first, then blocks the identical attempt in protected mode, then settles the honest request for real.
 
+## Is this a real problem?
+
+"Payment confirmed" ≠ "payment confirmed **for this exact thing**" is one of the most repeated integration vulnerabilities in payment history: in-app purchase receipts replayed across products, crypto deposits credited by matching the amount alone, web-shop integrations that verify *a* payment succeeded but never check it was for *this* order. Every new payment rail goes through this phase; x402 integrations will be no exception.
+
+Two things make it sharper here. **Agents don't notice** — a human sees the wrong report open; an autonomous payer making hundreds of paid calls through proxies and tool-servers does not. And binding buys more than defense: because the commitment lives in the public transaction memo, **anyone can prove after the fact exactly which request a payment authorized** — dispute resolution and audit for machine-to-machine commerce, with no trust between the parties.
+
 ## Try it in 60 seconds — no keys needed
 
 ```bash

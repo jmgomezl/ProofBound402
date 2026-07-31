@@ -56,7 +56,7 @@ Open the **Technical proof** panel.
 
 ## 4:15 — Close (30s)
 
-**"ProofBound402 doesn't claim a flaw in x402 — it hardens the integration pattern every resource server needs when agents pay autonomously. One payment, one exact request, publicly provable on Hedera. Repo, evidence, and verified HashScan transactions are linked below."**
+**"This is the oldest bug in payments — receipts replayed across products, deposits matched by amount alone — arriving on a new rail, and autonomous agents won't notice when it hits them. ProofBound402 doesn't claim a flaw in x402 — it hardens the integration pattern every resource server needs when agents pay autonomously. One payment, one exact request, publicly provable on Hedera. Repo, evidence, and verified HashScan transactions are linked below."**
 
 ---
 

@@ -713,6 +713,24 @@ export function App() {
           </aside>
         </section>
 
+        <section className="why-band" aria-label="Why this matters">
+          <div className="why-band__item">
+            <ReceiptText size={17} />
+            <b>An old bug, a new rail</b>
+            <p>Receipts replayed across products, deposits matched by amount alone — every payment rail has been hit by unbound confirmations. x402 will be no exception.</p>
+          </div>
+          <div className="why-band__item">
+            <WalletCards size={17} />
+            <b>Agents will not notice</b>
+            <p>A human sees the wrong report open. An autonomous payer making hundreds of paid calls through proxies does not.</p>
+          </div>
+          <div className="why-band__item">
+            <Fingerprint size={17} />
+            <b>Provable by anyone</b>
+            <p>The label lives in the public transaction memo, so anyone can verify after the fact exactly what a payment authorized.</p>
+          </div>
+        </section>
+
         <details className="technical-panel">
           <summary>
             <span><Fingerprint size={17} /><b>Technical proof</b></span>
