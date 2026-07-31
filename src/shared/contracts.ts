@@ -45,14 +45,24 @@ export interface DemoState {
     digest: string;
     nonce: string;
     expiresAt: number;
-    status: "issued" | "consumed";
+    status: "issued" | "reserved" | "consumed";
+    paymentRequired: {
+      x402Version: number;
+      resource: string;
+      scheme: string;
+      network: string;
+      amount: string;
+      asset: string;
+      payTo: string;
+      feePayer: string;
+    };
   };
   evidence?: {
     transactionId: string;
     consensusTimestamp: string;
     memo: string;
-    hcsTopicId: string;
-    hcsSequenceNumber: string;
+    hcsTopicId?: string;
+    hcsSequenceNumber?: string;
     hashscanTransactionUrl?: string;
     hashscanTopicUrl?: string;
   };

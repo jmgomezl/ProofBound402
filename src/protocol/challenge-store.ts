@@ -41,6 +41,19 @@ export class ChallengeStore {
     actualIntent: RequestIntent,
     now = Date.now(),
   ): VerificationResult {
+    const result = this.reserve(id, memo, actualIntent, now);
+    if (result.ok) {
+      this.commit(id, now);
+    }
+    return result;
+  }
+
+  reserve(
+    id: string,
+    memo: string,
+    actualIntent: RequestIntent,
+    now = Date.now(),
+  ): VerificationResult {
     const challenge = this.#challenges.get(id);
     if (!challenge) {
       return {
@@ -52,10 +65,30 @@ export class ChallengeStore {
 
     const result = verifyBinding(challenge, memo, actualIntent, now);
     if (result.ok) {
-      challenge.status = "consumed";
-      challenge.consumedAt = now;
+      challenge.status = "reserved";
+      challenge.reservedAt = now;
     }
     return result;
+  }
+
+  commit(id: string, now = Date.now()): boolean {
+    const challenge = this.#challenges.get(id);
+    if (!challenge || challenge.status !== "reserved") {
+      return false;
+    }
+    challenge.status = "consumed";
+    challenge.consumedAt = now;
+    return true;
+  }
+
+  release(id: string): boolean {
+    const challenge = this.#challenges.get(id);
+    if (!challenge || challenge.status !== "reserved") {
+      return false;
+    }
+    challenge.status = "issued";
+    delete challenge.reservedAt;
+    return true;
   }
 
   clear(): void {

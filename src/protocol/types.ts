@@ -31,7 +31,8 @@ export interface BindingChallenge {
   claims: BindingClaims;
   digest: string;
   memo: string;
-  status: "issued" | "consumed";
+  status: "issued" | "reserved" | "consumed";
+  reservedAt?: number;
   consumedAt?: number;
 }
 

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { PaymentPayload, PaymentRequired, SettleResponse } from "@x402/core/types";
 import { ChallengeStore } from "../protocol/challenge-store.js";
 import type { BindingChallenge, RequestIntent } from "../protocol/types.js";
 import {
@@ -14,12 +15,6 @@ import {
   type SettlementEvidence,
 } from "./settlement.js";
 
-const DEMO_PAYER = "0.0.8008";
-const DEMO_PAY_TO = "0.0.7007";
-const DEMO_AMOUNT = "1000000";
-const DEMO_ASSET = "0.0.0";
-const DEMO_NETWORK = "hedera:testnet";
-
 function event(
   kind: DemoEvent["kind"],
   title: string,
@@ -30,7 +25,13 @@ function event(
   return { id: randomUUID(), at: new Date().toISOString(), kind, title, detail, tone, proof };
 }
 
-function asPublicChallenge(challenge: BindingChallenge, resource: ResourceId) {
+function asPublicChallenge(
+  challenge: BindingChallenge,
+  resource: ResourceId,
+  settlement: SettlementAdapter,
+) {
+  const paymentRequired = settlement.paymentRequired(challenge);
+  const requirement = paymentRequired.accepts[0];
   return {
     id: challenge.id,
     resource,
@@ -39,6 +40,16 @@ function asPublicChallenge(challenge: BindingChallenge, resource: ResourceId) {
     nonce: challenge.claims.nonce,
     expiresAt: challenge.claims.expiresAt,
     status: challenge.status,
+    paymentRequired: {
+      x402Version: paymentRequired.x402Version,
+      resource: paymentRequired.resource.url,
+      scheme: requirement.scheme,
+      network: requirement.network,
+      amount: requirement.amount,
+      asset: requirement.asset,
+      payTo: requirement.payTo,
+      feePayer: String(requirement.extra?.feePayer ?? ""),
+    },
   } as const;
 }
 
@@ -46,7 +57,7 @@ export class DemoEngine {
   readonly #challenges = new ChallengeStore();
   readonly #settlement: SettlementAdapter;
   #events: DemoEvent[] = [];
-  #active?: { challenge: BindingChallenge; resource: ResourceId };
+  #active?: { challenge: BindingChallenge; resource: ResourceId; body: unknown };
   #evidence?: SettlementEvidence;
 
   constructor(settlement: SettlementAdapter = new SimulatedSettlementAdapter()) {
@@ -59,8 +70,28 @@ export class DemoEngine {
       mode: this.#settlement.mode,
       events: structuredClone(this.#events),
       activeChallenge:
-        current && this.#active ? asPublicChallenge(current, this.#active.resource) : undefined,
+        current && this.#active
+          ? asPublicChallenge(current, this.#active.resource, this.#settlement)
+          : undefined,
       evidence: this.#evidence ? structuredClone(this.#evidence) : undefined,
+    };
+  }
+
+  paymentRequired(): PaymentRequired | undefined {
+    const current = this.#active ? this.#challenges.get(this.#active.challenge.id) : undefined;
+    return current ? this.#settlement.paymentRequired(current) : undefined;
+  }
+
+  paymentResponse(): SettleResponse | undefined {
+    if (!this.#evidence || !this.#active) {
+      return undefined;
+    }
+    return {
+      success: true,
+      payer: this.#settlement.profile.payer,
+      transaction: this.#evidence.transactionId,
+      network: this.#settlement.profile.network,
+      amount: this.#settlement.profile.amount,
     };
   }
 
@@ -74,13 +105,14 @@ export class DemoEngine {
 
   runUnboundAttack(): ApiResult {
     const paymentId = randomUUID();
+    const { amount, asset, payTo } = this.#settlement.profile;
     this.#events.push(
       event(
         "payment.created",
         "Payment authorized for Market pulse",
         "The unbound server records only amount, asset, recipient, and payer.",
         "neutral",
-        { paymentId, amount: DEMO_AMOUNT, asset: DEMO_ASSET, payTo: DEMO_PAY_TO },
+        { paymentId, amount, asset, payTo },
       ),
       event(
         "attack.accepted",
@@ -97,9 +129,15 @@ export class DemoEngine {
     );
   }
 
-  issueBoundChallenge(resource: ResourceId = "basic"): ApiResult {
-    const challenge = this.#challenges.issue(this.#intent(resource), 120_000);
-    this.#active = { challenge, resource };
+  issueBoundChallenge(
+    resource: ResourceId = "basic",
+    body: unknown = { format: "json", window: "24h" },
+  ): ApiResult {
+    const challenge = this.#challenges.issue(
+      this.#intent(resource, body),
+      this.#settlement.profile.challengeTtlSeconds * 1_000,
+    );
+    this.#active = { challenge, resource, body };
     this.#evidence = undefined;
     this.#events.push(
       event(
@@ -123,7 +161,7 @@ export class DemoEngine {
     const result = this.#challenges.redeem(
       active.challenge.id,
       active.challenge.memo,
-      this.#intent(target),
+      this.#intent(target, active.body),
     );
 
     this.#events.push(
@@ -143,32 +181,36 @@ export class DemoEngine {
     return this.#result(!result.ok, result.code, result.message);
   }
 
-  async settleBoundRequest(): Promise<ApiResult> {
+  async settleBoundRequest(
+    paymentPayload?: PaymentPayload,
+    actualRequest?: { resource: ResourceId; body: unknown },
+  ): Promise<ApiResult> {
     if (!this.#active) {
       this.issueBoundChallenge("basic");
     }
 
     const active = this.#active!;
-    const result = this.#challenges.redeem(
+    const actualResource = actualRequest?.resource ?? active.resource;
+    const actualBody = actualRequest?.body ?? active.body;
+    const result = this.#challenges.reserve(
       active.challenge.id,
       active.challenge.memo,
-      this.#intent(active.resource),
+      this.#intent(actualResource, actualBody),
     );
     if (!result.ok) {
       return this.#result(false, result.code, result.message);
     }
 
-    this.#events.push(
-      event(
-        "request.delivered",
-        `${DEMO_RESOURCES[active.resource].label} authorized`,
-        "The memo commitment matches the exact inbound request and the nonce is now consumed.",
-        "success",
-        { digest: active.challenge.digest, nonceState: "CONSUMED" },
-      ),
-    );
+    try {
+      this.#evidence = await this.#settlement.settle(active.challenge, paymentPayload);
+    } catch (error) {
+      this.#challenges.release(active.challenge.id);
+      throw error;
+    }
+    if (!this.#challenges.commit(active.challenge.id)) {
+      throw new Error("Binding reservation was lost before delivery");
+    }
 
-    this.#evidence = await this.#settlement.settle(active.challenge.memo, active.challenge.claims);
     this.#events.push(
       event(
         "settlement.confirmed",
@@ -182,29 +224,43 @@ export class DemoEngine {
         },
       ),
       event(
-        "receipt.published",
-        `${this.#settlement.mode === "testnet" ? "HCS" : "Simulated HCS"} receipt published`,
-        "The public receipt links request authorization, settlement, and delivery without exposing the body.",
+        "request.delivered",
+        `${DEMO_RESOURCES[active.resource].label} authorized`,
+        "The signed memo matches the inbound request, settlement is public, and the nonce is consumed.",
         "success",
         {
-          topicId: this.#evidence.hcsTopicId,
-          sequenceNumber: this.#evidence.hcsSequenceNumber,
+          digest: active.challenge.digest,
+          nonceState: "CONSUMED",
         },
       ),
     );
+    if (this.#evidence.hcsTopicId && this.#evidence.hcsSequenceNumber) {
+      this.#events.push(
+        event(
+          "receipt.published",
+          `${this.#settlement.mode === "testnet" ? "HCS" : "Simulated HCS"} receipt published`,
+          "The public receipt links request authorization, settlement, and delivery without exposing the body.",
+          "success",
+          {
+            topicId: this.#evidence.hcsTopicId,
+            sequenceNumber: this.#evidence.hcsSequenceNumber,
+          },
+        ),
+      );
+    }
     return this.#result(true, "DELIVERED", "Bound request settled and delivered.");
   }
 
-  #intent(resource: ResourceId): RequestIntent {
+  #intent(resource: ResourceId, body: unknown = { format: "json", window: "24h" }): RequestIntent {
     return {
       method: "POST",
       resource: DEMO_RESOURCES[resource].path,
-      body: { format: "json", window: "24h" },
-      amount: DEMO_AMOUNT,
-      asset: DEMO_ASSET,
-      payTo: DEMO_PAY_TO,
-      payer: DEMO_PAYER,
-      network: DEMO_NETWORK,
+      body,
+      amount: this.#settlement.profile.amount,
+      asset: this.#settlement.profile.asset,
+      payTo: this.#settlement.profile.payTo,
+      payer: this.#settlement.profile.payer,
+      network: this.#settlement.profile.network,
     };
   }
 
