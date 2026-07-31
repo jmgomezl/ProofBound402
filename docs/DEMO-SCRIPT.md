@@ -16,9 +16,9 @@ Card 01, "Same payment opens both."
 
 **"Here are two reports with identical price, asset, and recipient. Without a label, the server literally cannot tell them apart."**
 
-Click **Show what goes wrong**. Point at the red banner and the verdict band.
+Click **Show what goes wrong** and let the door sequence play: the paid-for report opens, then the other one **also opens**, in red.
 
-**"One payment for the cheap report just opened the expensive one. The server knew money moved — nothing more."**
+**"Watch: the report it paid for opens — and the other one also opens. One payment, both doors. The server knew money moved — nothing more."**
 
 ## 1:15 — Block it (60s)
 
@@ -26,7 +26,7 @@ Card 02, "Payment opens one report."
 
 **"Now the protected version. Before paying, the server issues a one-time label: this payment is for Market pulse, this exact request body, this payer, once, and it expires."**
 
-Click **Create label for Market pulse**. Point at the label going READY in the diagram up top if visible.
+Click **Create label for Market pulse**. Point at step 1's text flipping to "Done: this payment now says 'Market pulse only,' single use."
 
 **"Let's try the same trick again — use this payment on the wrong report."**
 
@@ -42,7 +42,7 @@ Click **Pay 0.01 HBAR and open**. While it settles (~10s), talk:
 
 **"The label's SHA-256 digest is committed into the Hedera transaction memo before the payer signs. Settlement goes through the official x402 Hedera facilitator. And the server doesn't take the facilitator's word for it — it independently confirms through Mirror Node that the memo matches and the exact amount reached the exact recipient."**
 
-When the verdict shows delivered, go to **Public evidence** and click the HashScan link.
+When it settles, the report itself unfolds with an **UNLOCKED** stamp — point at it, then click **VIEW ON HASHSCAN** in its footer.
 
 **"Here's the transaction on HashScan. The memo starts with pb402:v1 — that's the request binding, publicly verifiable by anyone."**
 

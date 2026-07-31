@@ -5,6 +5,7 @@ import type { BindingChallenge, RequestIntent } from "../protocol/types.js";
 import {
   DEMO_RESOURCES,
   type ApiResult,
+  type DeliveredReport,
   type DemoEvent,
   type DemoState,
   type ResourceId,
@@ -58,6 +59,7 @@ export class DemoEngine {
   readonly #settlement: SettlementAdapter;
   #events: DemoEvent[] = [];
   #active?: { challenge: BindingChallenge; resource: ResourceId; body: unknown };
+  #deliveredReport?: DeliveredReport;
   #evidence?: SettlementEvidence;
 
   constructor(settlement: SettlementAdapter = new SimulatedSettlementAdapter()) {
@@ -69,6 +71,9 @@ export class DemoEngine {
     return {
       mode: this.#settlement.mode,
       events: structuredClone(this.#events),
+      deliveredReport: this.#deliveredReport
+        ? structuredClone(this.#deliveredReport)
+        : undefined,
       activeChallenge:
         current && this.#active
           ? asPublicChallenge(current, this.#active.resource, this.#settlement)
@@ -99,6 +104,7 @@ export class DemoEngine {
     this.#challenges.clear();
     this.#events = [];
     this.#active = undefined;
+    this.#deliveredReport = undefined;
     this.#evidence = undefined;
     return this.#result(true, "RESET", "Attack lab reset.");
   }
@@ -138,6 +144,7 @@ export class DemoEngine {
       this.#settlement.profile.challengeTtlSeconds * 1_000,
     );
     this.#active = { challenge, resource, body };
+    this.#deliveredReport = undefined;
     this.#evidence = undefined;
     this.#events.push(
       event(
@@ -210,6 +217,10 @@ export class DemoEngine {
     if (!this.#challenges.commit(active.challenge.id)) {
       throw new Error("Binding reservation was lost before delivery");
     }
+    this.#deliveredReport = {
+      resource: active.resource,
+      content: [...DEMO_RESOURCES[active.resource].content],
+    };
 
     this.#events.push(
       event(

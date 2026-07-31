@@ -291,7 +291,10 @@ export function App() {
   }, [state.events]);
   const reuseBlocked = activeEvents.some((event) => event.kind === "attack.blocked");
   const riskExposed = state.events.some((event) => event.kind === "attack.accepted");
-  const delivered = challenge?.status === "consumed";
+  const deliveredReport = state.deliveredReport;
+  const delivered = Boolean(
+    challenge?.status === "consumed" && deliveredReport?.resource === challenge.resource,
+  );
   const guidedStep = !challenge ? 0 : delivered ? 3 : reuseBlocked ? 2 : 1;
   const selected = DEMO_RESOURCES[selectedResource];
   const alternate = DEMO_RESOURCES[selectedResource === "basic" ? "premium" : "basic"];
@@ -580,14 +583,14 @@ export function App() {
                     </span>
                   </div>
                 )}
-                {delivered && (
-                  <div className="report-doc" aria-label={`${selected.label} report, unlocked`}>
+                {delivered && deliveredReport && (
+                  <div className="report-doc" aria-label={`${DEMO_RESOURCES[deliveredReport.resource].label} report, unlocked`}>
                     <div className="report-doc__head">
-                      <b>{selected.label}</b>
+                      <b>{DEMO_RESOURCES[deliveredReport.resource].label}</b>
                       <span>UNLOCKED</span>
                     </div>
                     <ul>
-                      {DEMO_RESOURCES[selectedResource].content.map((line, index) => (
+                      {deliveredReport.content.map((line, index) => (
                         <li key={index} style={{ animationDelay: `${0.3 + index * 0.2}s` }}>{line}</li>
                       ))}
                     </ul>
