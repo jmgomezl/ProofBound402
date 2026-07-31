@@ -172,19 +172,21 @@ function DemoMilestone({
   detail,
   state,
   targetId,
+  onJump,
 }: {
   number: number;
   title: string;
   detail: string;
   state: "waiting" | "active" | "done";
   targetId: string;
+  onJump: (targetId: string) => void;
 }) {
   return (
     <button
       type="button"
       className={`demo-milestone demo-milestone--${state}`}
       title="Jump to this step"
-      onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "center" })}
+      onClick={() => onJump(targetId)}
     >
       <span>{state === "done" ? <Check size={14} /> : number}</span>
       <span className="demo-milestone__copy"><b>{title}</b><small>{detail}</small></span>
@@ -201,6 +203,19 @@ export function App() {
     text: string;
     code?: string;
   } | null>(null);
+  const [flashCard, setFlashCard] = useState<string | null>(null);
+
+  const jumpTo = useCallback((targetId: string) => {
+    document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setFlashCard(null);
+    requestAnimationFrame(() => setFlashCard(targetId));
+  }, []);
+
+  useEffect(() => {
+    if (!flashCard) return;
+    const timer = setTimeout(() => setFlashCard(null), 1_400);
+    return () => clearTimeout(timer);
+  }, [flashCard]);
 
   useEffect(() => {
     request<DemoState>("/api/demo/state").then(setState).catch((error: Error) => {
@@ -326,7 +341,7 @@ export function App() {
             <button
               type="button"
               className="action action--dark intro__cta"
-              onClick={() => document.getElementById("scenario-unbound")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              onClick={() => jumpTo("scenario-unbound")}
             >
               <Play size={16} fill="currentColor" />
               <span>See it in three steps</span>
@@ -377,6 +392,7 @@ export function App() {
               detail="Wrong report opens"
               state={riskExposed ? "done" : "active"}
               targetId="scenario-unbound"
+              onJump={jumpTo}
             />
             <ArrowRight size={15} />
             <DemoMilestone
@@ -385,6 +401,7 @@ export function App() {
               detail="Label does not match"
               state={reuseBlocked ? "done" : riskExposed ? "active" : "waiting"}
               targetId="scenario-bound"
+              onJump={jumpTo}
             />
             <ArrowRight size={15} />
             <DemoMilestone
@@ -393,6 +410,7 @@ export function App() {
               detail="Public record"
               state={delivered ? "done" : reuseBlocked ? "active" : "waiting"}
               targetId="scenario-bound"
+              onJump={jumpTo}
             />
           </div>
         </section>
@@ -407,7 +425,7 @@ export function App() {
           </div>
 
           <div className="comparison-grid">
-            <article className="scenario scenario--unsafe" id="scenario-unbound">
+            <article className={`scenario scenario--unsafe ${flashCard === "scenario-unbound" ? "scenario--flash" : ""}`} id="scenario-unbound">
               <div className="scenario__header">
                 <span className="scenario__number">STEP 1 · START HERE</span>
                 <span className="risk"><AlertTriangle size={14} /> WITHOUT A LABEL</span>
@@ -453,7 +471,7 @@ export function App() {
                   <ActionButton
                     icon={<ArrowRight size={16} />}
                     variant="dark"
-                    onClick={() => document.getElementById("scenario-bound")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                    onClick={() => jumpTo("scenario-bound")}
                     testId="goto-protected"
                   >
                     Next: block it with a label
@@ -462,7 +480,7 @@ export function App() {
               </div>
             </article>
 
-            <article className="scenario scenario--bound" id="scenario-bound">
+            <article className={`scenario scenario--bound ${flashCard === "scenario-bound" ? "scenario--flash" : ""}`} id="scenario-bound">
               <div className="scenario__header">
                 <span className="scenario__number">STEPS 2–3 · THE FIX</span>
                 <span className="guard"><LockKeyhole size={14} /> ONE-TIME LABEL</span>
