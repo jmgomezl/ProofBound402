@@ -1,0 +1,37 @@
+name: Feature
+description: Propose a new capability with explicit acceptance and evidence criteria.
+title: "feat: "
+labels: ["type: feature"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What user or judge-visible outcome should exist?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Describe the smallest complete implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- [ ] Observable behavior\n- [ ] Test or on-chain evidence"
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Security and public-data impact
+      description: State affected invariants and any data written to the transaction memo or HCS.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and blockers

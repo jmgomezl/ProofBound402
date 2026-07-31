@@ -1,0 +1,40 @@
+name: Bug
+description: Report a reproducible defect or security invariant failure.
+title: "fix: "
+labels: ["type: bug"]
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Include the request, proof state, logs, and chain mode without secrets.
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - Security invariant or unauthorized delivery
+        - Settlement or on-chain evidence
+        - Functional regression
+        - Demo or presentation defect
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Add failing test output, screenshots, or HashScan links.
