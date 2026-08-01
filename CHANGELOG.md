@@ -21,3 +21,4 @@ All notable changes to ProofBound402 are recorded here. This project follows Kee
 - Dependabot monitoring and documented residual Hedera SDK dependency risk.
 - Patched `ws` override for the fixable transitive advisory.
 - Phone-safe proof links and 44px touch targets across the judge demo.
+- MIT open-source license and package metadata.
