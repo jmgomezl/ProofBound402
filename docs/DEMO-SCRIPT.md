@@ -76,6 +76,7 @@ Open the **Technical proof** panel.
 When an AI agent pays per request with x402, settlement proves money moved — not what it unlocked. Two resources with identical payment terms are indistinguishable, so a payment for one can be transplanted to the other. ProofBound402 closes that gap using Hedera rails: the server issues a one-time binding (method, resource, body hash, amount, asset, recipient, payer, nonce, network, expiry), its SHA-256 digest rides in the Hedera transaction memo as `pb402:v1:<digest>`, and delivery is authorized only after Mirror Node independently confirms the memo and the exact transfer. The demo reproduces the transplant attack live, blocks it, then settles a real testnet payment end to end through the official `@x402/core` + `@x402/hedera` facilitator.
 
 **Links:**
+- Live demo: https://proofofbound402.aivylabs.xyz
 - Repo: https://github.com/jmgomezl/ProofBound402
 - Evidence: https://github.com/jmgomezl/ProofBound402/blob/main/EVIDENCE.md
 - HashScan: https://hashscan.io/testnet/transaction/0.0.9859769-1785521551-549343245

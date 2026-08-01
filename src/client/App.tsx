@@ -31,16 +31,36 @@ const DEMO_SESSION_STORAGE_KEY = "proofbound402.demo-session";
 
 let fallbackDemoSessionId: string | undefined;
 
+// crypto.randomUUID exists only in secure contexts, so it is absent over plain HTTP.
+function createSessionUuid(): string {
+  const webCrypto = globalThis.crypto as Crypto | undefined;
+  if (typeof webCrypto?.randomUUID === "function") return webCrypto.randomUUID();
+
+  const bytes = new Uint8Array(16);
+  if (typeof webCrypto?.getRandomValues === "function") {
+    webCrypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 function getDemoSessionId(): string {
   try {
     const existing = sessionStorage.getItem(DEMO_SESSION_STORAGE_KEY);
     if (existing) return existing;
 
-    const created = crypto.randomUUID();
+    const created = createSessionUuid();
     sessionStorage.setItem(DEMO_SESSION_STORAGE_KEY, created);
     return created;
   } catch {
-    fallbackDemoSessionId ??= crypto.randomUUID();
+    fallbackDemoSessionId ??= createSessionUuid();
     return fallbackDemoSessionId;
   }
 }
