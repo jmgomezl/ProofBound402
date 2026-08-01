@@ -6,3 +6,6 @@ dist-server/
 coverage/
 *.log
 .claude/settings.local.json
+
+# Generated narration audio (video asset, not source)
+docs/demo-narration.mp3
