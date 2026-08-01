@@ -1,0 +1,7 @@
+Total runtime: 2:36.08  (395 words)
+
+ 0:00.00  1 - The blind spot
+ 0:19.68  2 - The exploit
+ 0:50.84  3 - The fix
+ 1:25.00  4 - Real settlement on Hedera
+ 2:04.78  5 - Why it matters
