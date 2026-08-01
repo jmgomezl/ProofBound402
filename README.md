@@ -37,7 +37,11 @@ The dashboard is an attack lab: it runs the exploit against a deliberately unbou
 
 Two things make it sharper here. **Agents don't notice** — a human sees the wrong report open; an autonomous payer making hundreds of paid calls through proxies and tool-servers does not. And binding buys more than defense: because the commitment lives in the public transaction memo, **anyone can prove after the fact exactly which request a payment authorized** — dispute resolution and audit for machine-to-machine commerce, with no trust between the parties.
 
-## Try it in 60 seconds — no keys needed
+## Try it in 60 seconds
+
+**Nothing to install:** open **<https://proofofbound402.aivylabs.xyz>** and follow the three guided steps. That deployment runs in `LIVE` mode, so step three settles a real Hedera testnet payment and links you straight to its HashScan record. Each visitor gets an isolated demo session, so it behaves the same no matter who else is clicking.
+
+**Or run it yourself:**
 
 ```bash
 npm install
@@ -45,7 +49,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Open <http://localhost:5173> and follow the three glowing steps. Without Hedera credentials everything runs in **visibly labeled simulation mode** — same code path, fake settlement, no setup. With funded testnet credentials the same dashboard flips to **LIVE** and step three moves real HBAR (see [Run it live](#run-it-live-on-hedera-testnet)).
+Open <http://localhost:5173>. Without Hedera credentials everything runs in **visibly labeled simulation mode** — same code path, fake settlement, no setup. With funded testnet credentials the same dashboard flips to **LIVE** and step three moves real HBAR (see [Run it live](#run-it-live-on-hedera-testnet)).
 
 ## How it works
 
@@ -75,8 +79,8 @@ The binding commits **method, normalized resource URL, request-body hash, amount
 
 | Criterion | Where to verify |
 | --- | --- |
-| **Working end-to-end flow** | The three-step dashboard demo (video above, or `npm run dev`); the full HTTP boundary at `POST /api/resources/basic` — 402 challenge → x402 v2 `PAYMENT-SIGNATURE` → delivery; integration tests covering exploit, rejection, and redemption |
-| **Real on-chain payments through x402** | Two verified testnet transfers made with the official `@x402/core` + `@x402/hedera` facilitator — HashScan links above, independently re-verified via Mirror Node in [EVIDENCE.md](./EVIDENCE.md) |
+| **Working end-to-end flow** | Run it yourself at **<https://proofofbound402.aivylabs.xyz>** (or the video above, or `npm run dev`); the full HTTP boundary at `POST /api/resources/basic` — 402 challenge → x402 v2 `PAYMENT-SIGNATURE` → delivery; integration tests covering exploit, rejection, and redemption |
+| **Real on-chain payments through x402** | Two verified testnet transfers made with the official `@x402/core` + `@x402/hedera` facilitator — HashScan links above, independently re-verified via Mirror Node in [EVIDENCE.md](./EVIDENCE.md). The live site settles a **new** real transaction every time you complete step three |
 | **Uses Hedera rails** | The transaction **memo** as the cryptographic commitment carrier; **Mirror Node** as an independent settlement oracle (exact payer debit and recipient credit, not just facilitator say-so); **HashScan** deep links from the dashboard's public evidence panel |
 
 This design is Hedera-native, not chain-generic: the memo travels inside the signed transfer itself, and Mirror Node gives every party — including the judges — a public API to re-check what was authorized.
