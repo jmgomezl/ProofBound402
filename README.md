@@ -4,6 +4,8 @@
 
 When an AI agent pays for a resource with x402, the settlement proves that money moved — not what that payment was allowed to unlock. Two resources with identical price, asset, and recipient are indistinguishable to the server, so a payment for one can silently unlock the other. ProofBound402 closes that gap with Hedera itself: the exact request is committed into the payment's transaction memo, and delivery happens only after Mirror Node independently confirms it.
 
+**▶ Try it live:** **<https://proofofbound402.aivylabs.xyz>** — running in `LIVE` mode against Hedera testnet. Click through the three steps and the payment you make is a real on-chain transaction you can open in HashScan from the page itself.
+
 **Demo video:** _(link here — under 5 minutes)_
 <!-- TODO before submission: add the demo video link above -->
 
