@@ -19,15 +19,15 @@
   "dependencies": {
     "@fontsource-variable/archivo": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
-    "@hiero-ledger/sdk": "2.86.2",
-    "@x402/core": "2.20.0",
-    "@x402/hedera": "2.20.0",
+    "@hiero-ledger/sdk": "2.89.1",
+    "@x402/core": "2.27.0",
+    "@x402/hedera": "2.27.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "lucide-react": "^1.27.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "zod": "^4.4.3"
+    "lucide-react": "^1.48.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
   },
   "overrides": {
     "ethers": {
@@ -37,16 +37,16 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/node": "^26.1.2",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@types/supertest": "^7.2.1",
-    "@vitejs/plugin-react": "^6.0.4",
-    "concurrently": "^10.0.4",
-    "supertest": "^7.1.4",
-    "tsx": "^4.20.5",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
+    "supertest": "^7.3.0",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vite": "^8.1.5",
-    "vitest": "^4.1.10"
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
   }
 }
